@@ -1,0 +1,101 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="RDFS-LLM-Bench — 人工知能学会全国大会 2026 口頭発表 OS-37"
+  description="人工知能学会全国大会 2026 口頭発表 OS-37。RDFS-LLM-Bench の提案。細川泰智、チャクラボルティ シュデシナ、森田武史。"
+  showNav={false}
+>
+  <div class="mx-auto max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
+    <nav class="mb-12">
+      <a href="/" class="inline-flex items-center gap-1.5 text-sm text-ink-faint transition-colors hover:text-ink dark:text-[#86868b] dark:hover:text-white">← Taichi Hosokawa</a>
+    </nav>
+
+    <header>
+      <div class="text-sm">
+        <span class="font-medium text-ink-faint dark:text-[#86868b]">口頭発表 OS-37</span>
+      </div>
+      <h1 class="mt-4 text-2xl font-semibold leading-snug tracking-tight text-ink sm:text-3xl dark:text-[#f5f5f7]">
+        RDFS-LLM-Bench: 大規模言語モデルによるRDFスキーマ推論の多段階評価ベンチマークの提案
+      </h1>
+      <p class="mt-4 font-mono text-xs text-ink-faint dark:text-[#86868b]">
+        OS-37「生成AIとナレッジグラフ」
+      </p>
+    </header>
+
+    <main class="mt-16 space-y-14">
+      <!-- Materials -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Materials</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <div class="mt-4 space-y-3">
+          <a
+            href="/jsai2026/slides.pdf"
+            class="group flex items-center gap-4 rounded-2xl border border-black/[0.1] px-5 py-4 transition-all duration-300 hover:border-black/[0.18] hover:bg-black/[0.02] dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[0.04]"
+          >
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent dark:bg-accent/15">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v4a1 1 0 001 1h4M9 13h6m-6 4h4m1 4H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block font-medium text-ink dark:text-[#f5f5f7]">発表スライド</span>
+              <span class="mt-0.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">slides.pdf</span>
+            </span>
+            <span class="shrink-0 text-ink-faint transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">↓</span>
+          </a>
+          <a
+            href="/jsai2026/paper.pdf"
+            class="group flex items-center gap-4 rounded-2xl border border-black/[0.1] px-5 py-4 transition-all duration-300 hover:border-black/[0.18] hover:bg-black/[0.02] dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[0.04]"
+          >
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent dark:bg-accent/15">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v4a1 1 0 001 1h4M9 13h6m-6 4h4m1 4H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block font-medium text-ink dark:text-[#f5f5f7]">論文</span>
+              <span class="mt-0.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">paper.pdf</span>
+            </span>
+            <span class="shrink-0 text-ink-faint transition-transform duration-300 group-hover:translate-y-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">↓</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Related -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Related</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <div class="mt-2 space-y-3">
+          <a
+            href="/rdfs-llm-bench"
+            class="group -mx-3 flex items-center justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+          >
+            <span>
+              <span class="block text-sm font-medium text-ink-faint dark:text-[#86868b]">Research / Benchmark</span>
+              <span class="mt-1 block font-medium leading-snug text-ink dark:text-[#f5f5f7]">RDFS-LLM-Bench</span>
+            </span>
+            <span class="shrink-0 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
+          </a>
+          <a
+            href="/jsai2026/poster"
+            class="group -mx-3 flex items-center justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+          >
+            <span>
+              <span class="block text-sm font-medium text-ink-faint dark:text-[#86868b]">ポスター発表 ・ 研究会優秀賞</span>
+              <span class="mt-1 block font-medium leading-snug text-ink dark:text-[#f5f5f7]">
+                RDFスキーマ推論規則を対象とした大規模言語モデルの推論能力の段階的評価
+              </span>
+            </span>
+            <span class="shrink-0 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
+          </a>
+        </div>
+      </section>
+    </main>
+  </div>
+</BaseLayout>

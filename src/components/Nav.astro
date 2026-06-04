@@ -1,0 +1,26 @@
+---
+const links = [
+  { label: 'About', href: '/#about' },
+  { label: 'Research', href: '/#research' },
+  { label: 'Projects', href: '/#projects' },
+  { label: 'Conference', href: '/jsai2026' },
+];
+---
+
+<nav
+  class="sticky top-0 z-40 border-b border-black/[0.08] bg-[#f5f5f7]/80 backdrop-blur-xl dark:border-white/10 dark:bg-black/70"
+>
+  <div class="container-wide flex h-12 items-center justify-between">
+    <a
+      href="/"
+      class="text-[15px] font-semibold tracking-tight text-ink transition-colors hover:text-accent dark:text-[#f5f5f7]"
+    >
+      Taichi Hosokawa
+    </a>
+    <div class="flex items-center gap-5 text-[13px] text-ink-soft sm:gap-7 dark:text-[#a1a1a6]">
+      {links.map((l) => (
+        <a href={l.href} class="transition-colors hover:text-ink dark:hover:text-white">{l.label}</a>
+      ))}
+    </div>
+  </div>
+</nav>

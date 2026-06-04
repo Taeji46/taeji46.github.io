@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-[#f5f5f7] text-ink antialiased dark:bg-black dark:text-[#f5f5f7];
+    min-height: 100vh;
+    letter-spacing: -0.01em;
+  }
+  :target {
+    scroll-margin-top: 6rem;
+  }
+}
+
+@layer components {
+  .container-wide {
+    @apply mx-auto w-full max-w-4xl px-6 sm:px-8;
+  }
+  .container-prose {
+    @apply mx-auto w-full max-w-3xl px-6 sm:px-8;
+  }
+  /* セクションの大見出し (Apple 風の大きく落ち着いた見出し) */
+  .section-heading {
+    @apply mb-8 text-2xl font-semibold tracking-tight text-ink sm:text-3xl dark:text-[#f5f5f7];
+  }
+  .link-accent {
+    @apply text-accent underline-offset-4 transition-colors hover:text-accent-hover hover:underline;
+  }
+
+  /* サイドバーの縦ナビ (線が伸びる Brittany Chiang 風) */
+  .side-link [data-line] {
+    @apply h-px w-8 bg-ink-faint/60 transition-all duration-300;
+  }
+  .side-link [data-label] {
+    @apply text-xs font-semibold uppercase tracking-[0.15em] text-ink-faint transition-colors duration-300;
+  }
+  .side-link:hover [data-line] {
+    @apply w-14 bg-ink;
+  }
+  .side-link:hover [data-label] {
+    @apply text-ink;
+  }
+  .side-link.active [data-line] {
+    @apply w-14 bg-ink;
+  }
+  .side-link.active [data-label] {
+    @apply text-ink;
+  }
+  .dark .side-link:hover [data-line],
+  .dark .side-link.active [data-line] {
+    @apply bg-white;
+  }
+  .dark .side-link:hover [data-label],
+  .dark .side-link.active [data-label] {
+    @apply text-white;
+  }
+
+  /* カード面: フラット + ヘアライン + 柔らかい影 (グラデなし) */
+  .gloss {
+    @apply rounded-2xl border border-black/[0.08] bg-white transition-all duration-300;
+    box-shadow:
+      0 1px 2px rgba(17, 17, 17, 0.04),
+      0 8px 24px -14px rgba(17, 17, 17, 0.14);
+  }
+  .dark .gloss {
+    @apply border-white/[0.08] bg-[#1c1c1e];
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 10px 28px -16px rgba(0, 0, 0, 0.6);
+  }
+  /* クリック可能なカードのホバー (ふわっと持ち上げ) */
+  .gloss-link:hover {
+    @apply -translate-y-px border-black/[0.12];
+    box-shadow:
+      0 2px 4px rgba(17, 17, 17, 0.05),
+      0 16px 34px -16px rgba(17, 17, 17, 0.22);
+  }
+  .dark .gloss-link:hover {
+    @apply border-white/20;
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.4),
+      0 18px 38px -16px rgba(0, 0, 0, 0.7);
+  }
+
+  /* ボタン: フラットな青 + 柔らかい影 */
+  .gloss-btn {
+    @apply bg-accent text-white transition-all duration-300;
+    box-shadow: 0 6px 18px -8px rgba(0, 113, 227, 0.45);
+  }
+  .gloss-btn:hover {
+    @apply -translate-y-px bg-accent-hover;
+    box-shadow: 0 10px 24px -10px rgba(0, 113, 227, 0.5);
+  }
+}

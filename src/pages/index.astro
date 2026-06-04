@@ -1,0 +1,406 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// ───────────────────────────────────────────────────────────
+//  プロフィール — ここを編集すれば反映されます
+// ───────────────────────────────────────────────────────────
+const profile = {
+  name: 'Taichi Hosokawa',
+  nameJa: '細川 泰智',
+  title: "Master's Student in Computer Science / iOS Developer",
+  affiliation: 'Aoyama Gakuin Univ.',
+};
+
+// About (箇条書き)
+const about = [
+  { ja: '情報系大学院 修士課程', en: "Master's Student in Computer Science" },
+  { ja: 'ナレッジグラフと大規模言語モデルの融合領域を研究', en: 'Researching the intersection of Knowledge Graphs and LLMs' },
+  { ja: 'iOS アプリケーション開発', en: 'iOS Application Development' },
+];
+
+// Awards
+const awards = [
+  {
+    year: '2025',
+    title: '人工知能学会全国大会 学生奨励賞',
+    meta: 'オーガナイズドセッション 口頭発表部門',
+    en: 'Student Encouragement Award, Annual Conference of the Japanese Society for Artificial Intelligence, 2025',
+  },
+  {
+    year: '2025',
+    title: '人工知能学会 研究会優秀賞',
+    meta: 'セマンティックウェブとオントロジー研究会',
+    en: 'Research Group Excellence Award, Japanese Society for Artificial Intelligence, 2025',
+  },
+];
+
+// Publications
+const publications = {
+  upcoming: [
+    {
+      year: '2026.06',
+      title: 'RDFS-LLM-Bench: 大規模言語モデルによるRDFスキーマ推論の多段階評価ベンチマークの提案',
+      venue: '2026年度 人工知能学会全国大会（第40回）',
+      href: '/jsai2026/oral',
+    },
+    {
+      year: '2026.06',
+      title: 'RDFスキーマ推論規則を対象とした大規模言語モデルの推論能力の段階的評価',
+      venue: '2026年度 人工知能学会全国大会（第40回）',
+      href: '/jsai2026/poster',
+    },
+  ],
+  international: [
+    {
+      title:
+        'Assessing Logical Inference Capabilities of Large Language Models through RDF Schema Entailment Rules: A Multi-Level Evaluation',
+      venue: 'ISWC-C 2025, Poster & Demo Track',
+      detail: 'pp. 304–308, Nov. 2025',
+      href: '/iswc2025/poster',
+    },
+  ],
+  domestic: [
+    {
+      year: '2025.09',
+      title: 'RDFスキーマ推論規則を対象とした大規模言語モデルの推論能力の段階的評価',
+      venue: '2025年度 人工知能学会 セマンティックウェブとオントロジー研究会（第66回）',
+      href: '/swo66/oral',
+    },
+    {
+      year: '2025.05',
+      title: 'RDFスキーマ推論規則を対象とした大規模言語モデルの推論能力の評価',
+      venue: '2025年度 人工知能学会全国大会（第39回）',
+      href: '/jsai2025/oral',
+    },
+  ],
+};
+
+// Research (成果物)
+const researchProjects = [
+  {
+    title: 'RDFS-LLM-Bench',
+    detail: '/rdfs-llm-bench',
+    description:
+      'RDFスキーマ (RDFS) の推論規則に対する大規模言語モデルの推論能力を評価するベンチマーク。LOD ソースから自動生成したデータセットと、ゼロショット評価パイプラインから構成される。',
+    points: [
+      '6 つの RDFS entailment rules × 複数のデータセット',
+      'OpenAI Batch / OpenAI 互換 API / Ollama に対応',
+      'MIT License で公開。利用・改変・再配布が可能',
+    ],
+    stack: ['Python', 'LLM', 'RDF / RDFS'],
+    links: [
+      { label: 'GitHub ↗', href: 'https://github.com/Taeji46/RDFS-LLM-Bench-ISWC2026' },
+      { label: 'Zenodo ↗', href: 'https://doi.org/10.5281/zenodo.19867258' },
+    ],
+  },
+];
+
+// Products
+const products = [
+  {
+    title: 'StuDOR',
+    detail: '/studor',
+    description:
+      '学習習慣の継続を支援する iOS 向けソーシャル学習アプリ。集中ルーム、学習記録、参考書管理、タイムライン共有、ストーリー形式の活動表示などの機能を備える。',
+    points: ['外部テスト実施中 (TestFlight)'],
+    stack: ['Swift', 'Firebase'],
+    links: [
+      { label: 'Web ↗', href: 'https://studor-a175e.web.app/' },
+      { label: 'TestFlight ↗', href: 'https://testflight.apple.com/join/FhGK27BF' },
+    ],
+  },
+  {
+    title: 'Noti2me',
+    detail: '/noti2me',
+    description: '大学の授業・時間割管理を行う iOS 向けアプリ。2023年12月公開。',
+    points: [],
+    stack: ['Swift'],
+    links: [
+      {
+        label: 'App Store ↗',
+        href: 'https://apps.apple.com/jp/app/noti2me-%E6%99%82%E9%96%93%E5%89%B2/id6474107092',
+      },
+    ],
+  },
+];
+
+// Tech Stack
+const skills = {
+  Languages: ['Python', 'C', 'Java', 'JavaScript', 'TypeScript', 'Swift'],
+  'Frameworks & Tools': ['Next.js', 'Node.js', 'Firebase'],
+};
+
+const sections = [
+  { n: '01', id: 'about', label: 'About' },
+  { n: '02', id: 'awards', label: 'Awards' },
+  { n: '03', id: 'publications', label: 'Publications' },
+  { n: '04', id: 'research', label: 'Research' },
+  { n: '05', id: 'products', label: 'Products' },
+  { n: '06', id: 'skills', label: 'Skills' },
+];
+const num = (id) => sections.find((s) => s.id === id)?.n;
+---
+
+<BaseLayout title={`${profile.name} — Portfolio`} showNav={false}>
+  <div class="relative mx-auto max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
+      <!-- 目次: 本文の左の余白に固定 (広い画面のみ) -->
+      <aside class="absolute right-full top-0 hidden h-full pr-12 xl:block">
+        <nav class="sticky top-24 w-28" aria-label="目次">
+          <ul class="space-y-4">
+            {sections.map((item) => (
+              <li>
+                <a href={`#${item.id}`} data-nav class="side-link group flex items-center gap-3 py-1">
+                  <span data-line></span>
+                  <span data-label>{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- ヘッダー + 本文 -->
+        <header>
+          <h1 class="text-4xl font-semibold tracking-tight text-ink sm:text-5xl dark:text-[#f5f5f7]">
+            {profile.name}
+          </h1>
+          <p class="mt-3 text-lg font-medium text-ink-soft dark:text-[#a1a1a6]">{profile.title}</p>
+          <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <span class="font-mono text-sm text-ink-faint dark:text-[#86868b]">{profile.affiliation}</span>
+            <span class="hidden h-4 w-px bg-black/10 sm:block dark:bg-white/15"></span>
+            <a
+              href="https://github.com/Taeji46"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group inline-flex items-center gap-2 font-mono text-sm text-ink-faint transition-colors hover:text-ink dark:text-[#86868b] dark:hover:text-white"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+                <path d="M12 .5C5.37.5 0 5.78 0 12.29c0 5.2 3.44 9.6 8.21 11.16.6.11.82-.25.82-.56 0-.28-.01-1.02-.02-2-3.34.71-4.04-1.58-4.04-1.58-.55-1.37-1.34-1.74-1.34-1.74-1.09-.73.08-.72.08-.72 1.2.08 1.84 1.21 1.84 1.21 1.07 1.79 2.81 1.27 3.5.97.11-.76.42-1.27.76-1.56-2.67-.3-5.47-1.3-5.47-5.79 0-1.28.47-2.33 1.24-3.15-.13-.3-.54-1.5.12-3.12 0 0 1.01-.32 3.3 1.2a11.6 11.6 0 0 1 6 0c2.29-1.52 3.3-1.2 3.3-1.2.66 1.62.25 2.82.12 3.12.77.82 1.24 1.87 1.24 3.15 0 4.5-2.81 5.49-5.49 5.78.43.36.81 1.08.81 2.18 0 1.58-.01 2.85-.01 3.24 0 .31.21.68.83.56A12.02 12.02 0 0 0 24 12.29C24 5.78 18.63.5 12 .5z" />
+              </svg>
+              Taeji46
+            </a>
+            <a
+              href="mailto:taichi.h.agu@gmail.com"
+              class="group inline-flex items-center gap-2 font-mono text-sm text-ink-faint transition-colors hover:text-ink dark:text-[#86868b] dark:hover:text-white"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l9 6 9-6M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" />
+              </svg>
+              taichi.h.agu@gmail.com
+            </a>
+          </div>
+        </header>
+
+        <main class="mt-16 space-y-20">
+          <!-- About -->
+          <section id="about" class="scroll-mt-24">
+            <div class="flex items-center gap-4">
+              <span class="font-mono text-sm text-ink-faint dark:text-[#86868b]">{num('about')}</span>
+              <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">About</h2>
+              <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+            </div>
+            <ul class="mt-6 space-y-4">
+              {about.map((a) => (
+                <li class="flex gap-3">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+                  <span>
+                    <span class="block text-ink dark:text-[#f5f5f7]">{a.ja}</span>
+                    <span class="mt-0.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">{a.en}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <!-- Awards -->
+          <section id="awards" class="scroll-mt-24">
+            <div class="flex items-center gap-4">
+              <span class="font-mono text-sm text-ink-faint dark:text-[#86868b]">{num('awards')}</span>
+              <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Awards</h2>
+              <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+            </div>
+            <ul class="mt-2 divide-y divide-black/[0.07] dark:divide-white/10">
+              {awards.map((a) => (
+                <li class="flex gap-5 py-5">
+                  <span class="w-12 shrink-0 pt-0.5 font-mono text-sm text-ink-faint dark:text-[#86868b]">{a.year}</span>
+                  <span class="flex-1">
+                    <span class="block font-medium leading-snug text-ink dark:text-[#f5f5f7]">{a.title}</span>
+                    <span class="mt-1 block text-sm text-ink-soft dark:text-[#a1a1a6]">{a.meta}</span>
+                    <span class="mt-1 block font-mono text-xs text-ink-faint dark:text-[#86868b]">{a.en}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <!-- Publications -->
+          <section id="publications" class="scroll-mt-24">
+            <div class="flex items-center gap-4">
+              <span class="font-mono text-sm text-ink-faint dark:text-[#86868b]">{num('publications')}</span>
+              <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Publications</h2>
+              <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+            </div>
+
+            <h3 class="mt-6 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint dark:text-[#86868b]">Upcoming</h3>
+            <ul class="mt-1 divide-y divide-black/[0.07] dark:divide-white/10">
+              {publications.upcoming.map((p) => (
+                <li>
+                  <a
+                    href={p.href}
+                    class="group -mx-3 flex items-start justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+                  >
+                    <span class="min-w-0 flex-1">
+                      <span class="block font-medium leading-snug text-ink dark:text-[#f5f5f7]">{p.title}</span>
+                      <span class="mt-1 block font-mono text-xs text-ink-faint dark:text-[#86868b]">{p.venue}</span>
+                    </span>
+                    <span class="shrink-0 pt-0.5 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            {publications.international.length > 0 && (
+              <>
+                <h3 class="mt-8 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint dark:text-[#86868b]">International</h3>
+                <ul class="mt-1 divide-y divide-black/[0.07] dark:divide-white/10">
+                  {publications.international.map((p) => (
+                    <li>
+                      <a
+                        href={p.href}
+                        class="group -mx-3 flex items-start justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+                      >
+                        <span class="min-w-0 flex-1">
+                          <span class="block font-medium leading-snug text-ink dark:text-[#f5f5f7]">{p.title}</span>
+                          <span class="mt-1.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">{p.venue} ・ {p.detail}</span>
+                        </span>
+                        <span class="shrink-0 pt-0.5 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <h3 class="mt-8 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint dark:text-[#86868b]">Domestic</h3>
+            <ul class="mt-1 divide-y divide-black/[0.07] dark:divide-white/10">
+              {publications.domestic.map((p) => (
+                <li>
+                  <a
+                    href={p.href}
+                    class="group -mx-3 flex items-start justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+                  >
+                    <span class="min-w-0 flex-1">
+                      <span class="block font-medium leading-snug text-ink dark:text-[#f5f5f7]">{p.title}</span>
+                      <span class="mt-1.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">{p.venue}</span>
+                    </span>
+                    <span class="shrink-0 pt-0.5 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <!-- Research -->
+          <section id="research" class="scroll-mt-24">
+            <div class="flex items-center gap-4">
+              <span class="font-mono text-sm text-ink-faint dark:text-[#86868b]">{num('research')}</span>
+              <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Research</h2>
+              <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+            </div>
+            <ul class="mt-2 divide-y divide-black/[0.07] dark:divide-white/10">
+              {researchProjects.map((p) => (
+                <li>
+                  <a
+                    href={p.detail}
+                    class="group -mx-3 flex gap-5 rounded-xl px-3 py-7 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+                  >
+                    <span class="min-w-0 flex-1">
+                      <span class="block font-semibold text-ink dark:text-[#f5f5f7]">{p.title}</span>
+                      <span class="mt-2 block max-w-prose text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">{p.description}</span>
+                      <span class="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-ink-faint dark:text-[#86868b]">
+                        {p.stack.map((t) => <span>{t}</span>)}
+                      </span>
+                    </span>
+                    <span class="shrink-0 pt-1 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <!-- Products -->
+          <section id="products" class="scroll-mt-24">
+            <div class="flex items-center gap-4">
+              <span class="font-mono text-sm text-ink-faint dark:text-[#86868b]">{num('products')}</span>
+              <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Products</h2>
+              <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+            </div>
+            <ul class="mt-2 divide-y divide-black/[0.07] dark:divide-white/10">
+              {products.map((p) => (
+                <li>
+                  <a
+                    href={p.detail}
+                    class="group -mx-3 flex gap-5 rounded-xl px-3 py-7 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+                  >
+                    <span class="min-w-0 flex-1">
+                      <span class="block font-semibold text-ink dark:text-[#f5f5f7]">{p.title}</span>
+                      <span class="mt-2 block max-w-prose text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">{p.description}</span>
+                      <span class="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-ink-faint dark:text-[#86868b]">
+                        {p.stack.map((t) => <span>{t}</span>)}
+                      </span>
+                    </span>
+                    <span class="shrink-0 pt-1 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <!-- Skills -->
+          <section id="skills" class="scroll-mt-24">
+            <div class="flex items-center gap-4">
+              <span class="font-mono text-sm text-ink-faint dark:text-[#86868b]">{num('skills')}</span>
+              <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Skills</h2>
+              <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+            </div>
+            <dl class="mt-6 space-y-4">
+              {Object.entries(skills).map(([category, list]) => (
+                <div class="flex flex-col gap-1 sm:flex-row sm:gap-6">
+                  <dt class="w-40 shrink-0 text-sm font-medium text-ink dark:text-[#f5f5f7]">{category}</dt>
+                  <dd class="font-mono text-sm text-ink-soft dark:text-[#a1a1a6]">{list.join('  ·  ')}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        </main>
+  </div>
+
+  <!-- スクロールスパイ (現在地の目次をハイライト) -->
+  <script is:inline>
+    const links = [...document.querySelectorAll('[data-nav]')];
+    const secs = links
+      .map((l) => document.getElementById(l.getAttribute('href').slice(1)))
+      .filter(Boolean);
+
+    function setActive(id) {
+      links.forEach((l) => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+    }
+
+    function onScroll() {
+      const line = window.innerHeight * 0.3; // 画面上から30%を判定ライン
+      let current = secs[0]?.id;
+      for (const s of secs) {
+        if (s.getBoundingClientRect().top - line <= 0) current = s.id;
+      }
+      // 最下部までスクロールしたら必ず最後のセクションを点灯
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+        current = secs[secs.length - 1]?.id;
+      }
+      if (current) setActive(current);
+    }
+
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+  </script>
+</BaseLayout>

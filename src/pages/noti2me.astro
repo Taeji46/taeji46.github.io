@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const meta = ['iOS App', 'Swift', '2023年12月公開'];
+
+const links = [
+  {
+    title: 'App Store',
+    sub: 'apps.apple.com',
+    href: 'https://apps.apple.com/jp/app/noti2me-%E6%99%82%E9%96%93%E5%89%B2/id6474107092',
+  },
+];
+---
+
+<BaseLayout
+  title="Noti2me"
+  description="大学の授業・時間割管理を行う iOS 向けアプリ。"
+  showNav={false}
+>
+  <div class="mx-auto max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
+    <nav class="mb-12">
+      <a href="/" class="inline-flex items-center gap-1.5 text-sm text-ink-faint transition-colors hover:text-ink dark:text-[#86868b] dark:hover:text-white">
+        ← Taichi Hosokawa
+      </a>
+    </nav>
+
+    <header>
+      <p class="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint dark:text-[#86868b]">Product / iOS App</p>
+      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl dark:text-[#f5f5f7]">Noti2me</h1>
+      <p class="mt-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+        大学の授業・時間割を管理する iOS 向けアプリ。
+      </p>
+      <p class="mt-4 font-mono text-xs text-ink-faint dark:text-[#86868b]">{meta.join('  ·  ')}</p>
+    </header>
+
+    <main class="mt-16 space-y-14">
+      <!-- Links -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Links</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-2 divide-y divide-black/[0.07] dark:divide-white/10">
+          {links.map((r) => (
+            <li>
+              <a
+                href={r.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group -mx-3 flex items-center justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+              >
+                <span class="flex items-baseline gap-3">
+                  <span class="font-medium text-ink dark:text-[#f5f5f7]">{r.title}</span>
+                  <span class="font-mono text-xs text-ink-faint dark:text-[#86868b]">{r.sub}</span>
+                </span>
+                <span class="text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- Overview -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Overview</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          大学の授業・時間割を管理する iOS 向けアプリ。2023年12月に App Store でリリース。
+        </p>
+      </section>
+    </main>
+  </div>
+</BaseLayout>

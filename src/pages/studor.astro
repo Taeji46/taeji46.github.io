@@ -1,0 +1,101 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const meta = ['iOS App', 'Swift', 'Firebase', '外部テスト中 (TestFlight)'];
+
+const features = [
+  { name: '集中ルーム', desc: '集中して学習するためのルーム機能' },
+  { name: '学習記録', desc: '学習時間・内容の記録' },
+  { name: '参考書管理', desc: '使用している参考書の管理' },
+  { name: 'タイムライン共有', desc: '学習活動をタイムラインで共有' },
+  { name: 'ストーリー形式の活動表示', desc: 'ストーリー形式での活動表示' },
+];
+
+const links = [
+  { title: '公式ホームページ', sub: 'Web', href: 'https://studor-a175e.web.app/' },
+  { title: 'TestFlight', sub: '外部テストに参加', href: 'https://testflight.apple.com/join/FhGK27BF' },
+];
+---
+
+<BaseLayout
+  title="StuDOR"
+  description="学習習慣の継続を支援する iOS ソーシャル学習アプリ。"
+  showNav={false}
+>
+  <div class="mx-auto max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
+    <nav class="mb-12">
+      <a href="/" class="inline-flex items-center gap-1.5 text-sm text-ink-faint transition-colors hover:text-ink dark:text-[#86868b] dark:hover:text-white">
+        ← Taichi Hosokawa
+      </a>
+    </nav>
+
+    <header>
+      <p class="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint dark:text-[#86868b]">Product / iOS App</p>
+      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl dark:text-[#f5f5f7]">StuDOR</h1>
+      <p class="mt-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+        学習習慣の継続を支援する iOS 向けソーシャル学習アプリ。
+      </p>
+      <p class="mt-4 font-mono text-xs text-ink-faint dark:text-[#86868b]">{meta.join('  ·  ')}</p>
+    </header>
+
+    <main class="mt-16 space-y-14">
+      <!-- Links -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Links</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-2 divide-y divide-black/[0.07] dark:divide-white/10">
+          {links.map((r) => (
+            <li>
+              <a
+                href={r.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group -mx-3 flex items-center justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+              >
+                <span class="flex items-baseline gap-3">
+                  <span class="font-medium text-ink dark:text-[#f5f5f7]">{r.title}</span>
+                  <span class="font-mono text-xs text-ink-faint dark:text-[#86868b]">{r.sub}</span>
+                </span>
+                <span class="text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- Overview -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Overview</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          集中ルーム・学習記録・参考書管理・タイムライン共有・ストーリー形式の活動表示を備えた、
+          学習習慣の継続を支援する iOS ソーシャル学習アプリ。現在 TestFlight で外部テストを実施中。
+        </p>
+      </section>
+
+      <!-- Features -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Features</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-6 space-y-3">
+          {features.map((f) => (
+            <li class="flex gap-3">
+              <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+              <span>
+                <span class="font-medium text-ink dark:text-[#f5f5f7]">{f.name}</span>
+                <span class="text-ink-soft dark:text-[#a1a1a6]"> — {f.desc}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+    </main>
+  </div>
+</BaseLayout>
