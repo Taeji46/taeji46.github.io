@@ -64,7 +64,7 @@ const findings = [
 
 // 共通のコードブロック用クラス
 const preCls =
-  'mt-1.5 overflow-x-auto rounded-lg border border-black/[0.08] bg-black/[0.02] p-3 font-mono text-[11px] leading-relaxed text-ink-soft dark:border-white/10 dark:bg-white/[0.03] dark:text-[#a1a1a6]';
+  'mt-1.5 whitespace-pre-wrap break-words rounded-lg border border-black/[0.08] bg-black/[0.02] p-3 font-mono text-[11px] leading-relaxed text-ink-soft dark:border-white/10 dark:bg-white/[0.03] dark:text-[#a1a1a6]';
 
 // 主張2: 推論トレースの証拠 (3 例)
 const claim2 = [
@@ -73,9 +73,7 @@ const claim2 = [
     meta: 'gpt-oss-120b ・ ARP-full ・ gs ・ 1-rule ・ rdfs2',
     premise: `<River, rdfs:domain, Cameron_Parish,_Louisiana>
 <mouthMountain, River, Calcasieu_River>`,
-    trace: `Using rdfs2: if <i, rdfs:domain, X> and <a, i, b> then <a, rdf:type, X>.
-So i=River, X=Cameron_Parish,_Louisiana, a=mouthMountain, b=Calcasieu_River.
-Thus infer <mouthMountain, rdf:type, Cameron_Parish,_Louisiana>.`,
+    trace: `Using rdfs2: if <i, rdfs:domain, X> and <a, i, b> then <a, rdf:type, X>. So i=River, X=Cameron_Parish,_Louisiana, a=mouthMountain, b=Calcasieu_River. Thus infer <mouthMountain, rdf:type, Cameron_Parish,_Louisiana>.`,
     note: 'ルール変数 i, X, a, b を前提の URI に明示的に代入してから結論を導出している。',
   },
   {
@@ -84,14 +82,10 @@ Thus infer <mouthMountain, rdf:type, Cameron_Parish,_Louisiana>.`,
     premise: `<Ayumgba, rdfs:domain, Callistus_Chukwu>
 <Ayumgba, rdfs:range, Animal>
 <birthPlace, Ayumgba, Place>`,
-    trace: `rdfs2: i=Ayumgba, X=Callistus_Chukwu, a=birthPlace, b=Place
-  → infer <birthPlace, rdf:type, Callistus_Chukwu> ✓
-rdfs3: i=Ayumgba, X=Animal, a=birthPlace, b=Place
-  → infer <Place, rdf:type, Animal> ✓
-rdfs5: subProperty transitivity: need subPropertyOf statements.
-  None in premise. So can't apply yet.
-rdfs7: No subproperty premises. So none.
-rdfs9: No subclass premises.
+    trace: `Hence infer <birthPlace, rdf:type, Callistus_Chukwu>. … So infer <Place, rdf:type, Animal>.
+rdfs5: subProperty transitivity: need subProperty statements. None in premise. So can't apply yet.
+rdfs7: … No subproperty premises. So none.
+rdfs9: … No subclass premises.
 rdfs11: subclass transitivity similar.`,
     note: '適用できるルールとできないルールを全件列挙し、不適用の根拠まで明示する checklist 型の推論。',
   },
@@ -101,7 +95,7 @@ rdfs11: subclass transitivity similar.`,
     premise: `<Work, rdfs:domain, Charlyne_Yi>
 <musicComposer, Work, Call_Me_Lucky>`,
     trace: `Using rdfs2: if <i, rdfs:domain, X> and <a, i, b> then <a, rdf:type, X>.
-Here i=Work, X=Charlyne_Yi, a=musicComposer, b=Call_Me_Lucky.
+Here i = Work, X = Charlyne_Yi, a = musicComposer, b = Call_Me_Lucky.
 Thus we infer <musicComposer, rdf:type, Charlyne_Yi>.`,
     note: 'Charlyne_Yi は人名、musicComposer はプロパティ名であり「musicComposer が Charlyne_Yi 型」は意味的に明らかに異常。しかしモデルは意味論的なコメントを一切加えず、形式ルールをそのまま適用して正解を導いている。',
   },
@@ -114,18 +108,10 @@ const claim3 = {
 <performer, rdfs:subPropertyOf, presenter>
 <presenter, rdfs:subPropertyOf, Australia:_The_Story_of_Us>
 <Person, performer, castMember>`,
-  trace: `[Step 1 — rdfs5]
-performer subPropertyOf presenter, presenter subPropertyOf Australia:_The_Story_of_Us
-→ infer <performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us>
-[Step 2 — rdfs7 (1回目)]
-performer subPropertyOf presenter + <Person, performer, castMember>
-→ infer <Person, presenter, castMember>
-[Step 3 — rdfs7 (2回目、Step1の導出トリプルを前提として使用)]
-performer subPropertyOf Australia:_The_Story_of_Us + <Person, performer, castMember>
-→ infer <Person, Australia:_The_Story_of_Us, castMember>
-[Step 4 — rdfs3]
-<performer, rdfs:range, Richard_Roxburgh> + <Person, performer, castMember>
-→ infer <castMember, rdf:type, Richard_Roxburgh>`,
+  trace: `We can combine subPropertyOf transitivity (rdfs5) to infer performer subPropertyOf Australia:_The_Story_of_Us … So produce triple: <performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us> using rdfs5.
+Then rdfs7: … propagate existing property assertion <Person, performer, castMember> to more general properties. …
+- From <performer, rdfs:subPropertyOf, presenter> and <Person, performer, castMember> infer <Person, presenter, castMember>.
+- From <performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us> and <Person, performer, castMember> infer <Person, Australia:_The_Story_of_Us, castMember>.`,
   response: `<performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us>
 <Person, presenter, castMember>
 <Person, Australia:_The_Story_of_Us, castMember>
@@ -137,23 +123,19 @@ performer subPropertyOf Australia:_The_Story_of_Us + <Person, performer, castMem
 // 主張5: name 設定での定義再構成 (120b vs 20b)
 const claim5big = {
   meta: 'gpt-oss-120b ・ ARP-name ・ ns ・ 1-rule ・ rdfs2',
-  trace: `We need to recall RDFS inference rules:
-rdfs2: (P rdfs:domain C) and (S P O) => (S rdf:type C).
-rdfs3: (P rdfs:range C) and (S P O) => (O rdf:type C).
-...
-Using rdfs2: i=oTD7lEpH, X=BmkM9IaZ, a=FKXah78z, b=g752VdWo.
-→ infer <FKXah78z, rdf:type, BmkM9IaZ>`,
+  trace: `…
+- rdfs2: (p rdfs:domain c), (s p o) -> s rdf:type c.
+…
+Using rdfs2: Since oTD7lEpH rdfs:domain BmkM9IaZ and subject FKXah78z oTD7lEpH g752VdWo, infer <FKXah78z, rdf:type, BmkM9IaZ>.`,
   response: `<FKXah78z, rdf:type, BmkM9IaZ>
 [used_rules: rdfs2]`,
   note: 'rdfs2 を「(P rdfs:domain C) and (S P O) ⇒ (S rdf:type C)」と正確に再構成し、正しく 1 トリプルを導出。',
 };
 const claim5small = {
   meta: 'gpt-oss-20b ・ 同一前提・同一条件',
-  trace: `Typically, rdfs2: If a property P is a subproperty of Q, and x P y, then x Q y.
-rdfs5: If P rdfs:domain C, and x P ... then x rdf:type C.
-...
-From rdfs5: <FKXah78z, rdf:type, BmkM9IaZ>
-From rdfs11: <oTD7lEpH, rdf:type, rdf:Property>`,
+  trace: `Typically, rdfs2: If a property P is a subproperty of Q, and x P y, then x Q y. … rdfs5: If P rdfs:domain C, and x P ... then x rdf:type C. rdfs7: If P rdfs:range C, and ... P y then y rdf:type C. …
+We can derive: From rdfs5: … So we can infer: <FKXah78z, rdf:type, BmkM9IaZ>.
+Also, we might infer that oTD7lEpH is a property. Maybe rdfs11: … So we could infer <oTD7lEpH, rdf:type, rdf:Property> maybe.`,
   response: `<FKXah78z, rdf:type, BmkM9IaZ>
 <oTD7lEpH, rdf:type, rdf:Property>
 [used_rules: rdfs5, rdfs11]`,
@@ -389,7 +371,7 @@ const claim5table = [
 
         <!-- 主張1 -->
         <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">主張 1 — 非推論モデルは語彙・字面的な手がかりに依存している</h3>
-        <p class="mt-1 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">Trace 証拠なし（非推論モデルは reasoning_content を持たない）</p>
+        <p class="mt-1 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">根拠: 定量スコア（非推論モデルは reasoning_content を出力しないため推論トレースは対象外）</p>
         <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
           定量的な傍証として、RK→GS の低下率が RK→LS の低下率を大きく上回る（例: GPT-4o の 2-rule で −38.2% vs −6.3%）。
           LS はランダム文字列ではなく英単語ベースの識別子で RK と意味的手がかりの量が近いため、手がかりが豊富な GS でのみ大きな誤りが生じていることを示す。
@@ -424,7 +406,7 @@ const claim5table = [
 
         <!-- 主張4 -->
         <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">主張 4 — パラメータ規模の効果</h3>
-        <p class="mt-1 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">Trace 証拠なし（定量スコアの比較のみ）</p>
+        <p class="mt-1 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">根拠: モデル規模間の定量スコア比較</p>
         <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
           Llama・GPT-4o 系では規模が大きいほど頑健になる一方、小規模の gpt-oss 推論モデルも高い頑健性を示し、
           明示的な推論手続きは小規模でも頑健性を生みうる。
