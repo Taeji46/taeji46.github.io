@@ -14,8 +14,9 @@
     "astro": "5.6.1"
   },
   "devDependencies": {
-    "@astrojs/tailwind": "5.1.5",
     "@astrojs/sitemap": "3.2.1",
+    "@astrojs/tailwind": "5.1.5",
+    "qrcode": "^1.5.4",
     "tailwindcss": "^3.4.17"
   }
 }

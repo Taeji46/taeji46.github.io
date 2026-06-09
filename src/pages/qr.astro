@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import QRCode from 'qrcode';
+
+// /profile への絶対URL（astro.config の site を基準に組み立てる）
+const profileUrl = new URL('/profile', Astro.site ?? 'https://taeji46.github.io').href;
+
+// ビルド時にQRをSVGで生成して埋め込む（表示時にネット接続不要）
+const qrSvg = await QRCode.toString(profileUrl, {
+  type: 'svg',
+  margin: 1,
+  width: 512,
+  color: { dark: '#000000', light: '#ffffff' },
+});
+
+// 表示用（スキームを省いて短く見せる）
+const displayUrl = profileUrl.replace(/^https?:\/\//, '');
+---
+
+<BaseLayout
+  title="QR — 細川泰智"
+  description="細川泰智（Taichi Hosokawa）のプロフィールQRコード。"
+  showNav={false}
+>
+  <div class="mx-auto flex w-full max-w-md flex-col items-center px-6 py-16 text-center sm:py-24">
+    <h1 class="text-2xl font-semibold tracking-tight text-ink dark:text-[#f5f5f7]">Taichi Hosokawa</h1>
+    <p class="mt-1 text-ink-soft dark:text-[#a1a1a6]">細川 泰智</p>
+
+    <div class="mt-8 w-full max-w-xs rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+      <div class="qr-wrap" set:html={qrSvg}></div>
+    </div>
+
+    <p class="mt-6 font-mono text-sm text-ink-faint dark:text-[#86868b]">{displayUrl}</p>
+    <p class="mt-2 text-sm text-ink-faint dark:text-[#86868b]">スキャンでプロフィールが開きます</p>
+  </div>
+</BaseLayout>
+
+<style>
+  /* 生成されたSVGをカード幅にフィットさせる */
+  .qr-wrap :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>

@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// 名刺がわりのプロフィールページ — リンクは隠さず全部はっきり表示する
+const links = [
+  {
+    title: 'Webサイト',
+    sub: 'taeji46.github.io',
+    href: '/',
+    internal: true,
+  },
+  {
+    title: 'GitHub',
+    sub: 'github.com/Taeji46',
+    href: 'https://github.com/Taeji46',
+  },
+  {
+    title: 'Email',
+    sub: 'taichi.h.agu@gmail.com',
+    href: 'mailto:taichi.h.agu@gmail.com',
+  },
+];
+---
+
+<BaseLayout
+  title="細川泰智 — プロフィール"
+  description="細川泰智（Taichi Hosokawa）。青山学院大学大学院 森田研究室 博士前期課程。LLM × Semantic Web の研究と iOS アプリ開発。"
+  showNav={false}
+>
+  <div class="mx-auto w-full max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
+    <header>
+      <h1 class="text-3xl font-semibold tracking-tight text-ink sm:text-4xl dark:text-[#f5f5f7]">
+        Taichi Hosokawa
+      </h1>
+      <p class="mt-2 text-lg text-ink-soft dark:text-[#a1a1a6]">細川 泰智</p>
+
+      <div class="mt-6 space-y-0.5 text-ink-soft dark:text-[#a1a1a6]">
+        <p>青山学院大学大学院　博士前期課程</p>
+        <p>森田研究室</p>
+      </div>
+    </header>
+
+    <main class="mt-12">
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Links</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-4 space-y-3">
+          {links.map((r) => (
+            <li>
+              <a
+                href={r.href}
+                target={r.internal ? undefined : '_blank'}
+                rel={r.internal ? undefined : 'noopener noreferrer'}
+                class="group flex items-center justify-between gap-4 rounded-2xl border border-black/[0.1] px-5 py-4 transition-all duration-300 hover:border-black/[0.18] hover:bg-black/[0.02] dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[0.04]"
+              >
+                <span class="min-w-0">
+                  <span class="block font-medium text-ink dark:text-[#f5f5f7]">{r.title}</span>
+                  <span class="mt-0.5 block break-all font-mono text-xs text-ink-faint dark:text-[#86868b]">{r.sub}</span>
+                </span>
+                <span class="shrink-0 text-ink-faint transition-all duration-300 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">
+                  {r.internal ? '→' : '↗'}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </main>
+  </div>
+</BaseLayout>
