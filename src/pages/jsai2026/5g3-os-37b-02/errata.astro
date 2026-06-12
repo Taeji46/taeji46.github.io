@@ -1,0 +1,274 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+// 訂正後の統合指標
+const cols = ['RI', 'SI', 'RRS', 'SRS', 'VR', 'TR', 'RDI'];
+const results = [
+  { name: 'gpt-oss-120b', v: [0.996, 0.998, 1.0, 1.0, 0.987, 0.994, 0.935] },
+  { name: 'gpt-oss-20b', v: [0.986, 0.99, 0.999, 0.999, 0.985, 0.994, 0.884] },
+  { name: 'GPT-4o', v: [0.932, 0.935, 0.98, 0.99, 0.958, 0.918, 0.852] },
+  { name: 'GPT-4o mini', v: [0.74, 0.711, 0.846, 0.889, 0.797, 0.817, 0.392] },
+  { name: 'Llama 3.1 70B', v: [0.907, 0.94, 0.902, 0.961, 0.814, 0.856, 0.565] },
+  { name: 'Llama 3.1 8B', v: [0.51, 0.522, 0.587, 0.611, 0.49, 0.701, 0.278] },
+];
+const fmt = (n) => n.toFixed(3);
+const colMax = cols.map((_, i) => Math.max(...results.map((r) => r.v[i])));
+const colMaxRow = cols.map((_, i) => results.findIndex((r) => r.v[i] === colMax[i]));
+
+// 指標の修正（発表論文 → 訂正後）
+const nameMap = [
+  {
+    before: 'NCR',
+    beforeFull: 'Naming Convention Robustness',
+    after: 'TR',
+    afterFull: 'Typographic Robustness',
+    note: '名称のみ',
+  },
+  {
+    before: 'RDK',
+    beforeFull: 'RDFS Entailment Rule Definition Knowledge',
+    after: 'RDI',
+    afterFull: 'Rule Definition Independence',
+    note: '定義を修正',
+  },
+];
+
+// 表4（修正版）データセット別の推論精度（指標: f1_triple ／ プロンプト: full ／ 評価: flex）
+const t4Cols = ['RK', 'LS', 'RVA', 'GS', 'GSC', 'NS', 'NSC'];
+const t4Models = ['GPT-4o mini', 'GPT-4o', 'Llama 3.1 8B', 'Llama 3.1 70B', 'gpt-oss-20b', 'gpt-oss-120b'];
+const t4Blocks = [
+  {
+    title: '1-rule / NRP (=Lv1)',
+    rows: [
+      [0.84, 0.79, 0.8, 0.73, 0.82, 0.88, 0.9],
+      [0.92, 0.9, 0.9, 0.88, 0.91, 0.97, 0.93],
+      [0.72, 0.66, 0.66, 0.4, 0.48, 0.7, 0.68],
+      [0.96, 0.92, 0.97, 0.75, 0.83, 0.98, 0.98],
+      [0.97, 0.98, 0.98, 0.98, 0.99, 0.98, 0.97],
+      [1.0, 0.99, 0.99, 1.0, 1.0, 1.0, 1.0],
+    ],
+  },
+  {
+    title: '1-rule / ARP (=Lv3)',
+    rows: [
+      [0.65, 0.6, 0.58, 0.49, 0.56, 0.73, 0.66],
+      [0.91, 0.89, 0.88, 0.83, 0.91, 0.88, 0.83],
+      [0.38, 0.37, 0.35, 0.19, 0.23, 0.38, 0.41],
+      [0.86, 0.77, 0.83, 0.57, 0.69, 0.92, 0.84],
+      [0.99, 0.99, 1.0, 0.98, 0.99, 1.0, 0.99],
+      [1.0, 1.0, 1.0, 0.99, 1.0, 1.0, 0.99],
+    ],
+  },
+  {
+    title: '3-rule / NRP (=Lv2)',
+    rows: [
+      [0.72, 0.68, 0.68, 0.4, 0.5, 0.63, 0.64],
+      [0.94, 0.91, 0.94, 0.79, 0.88, 0.96, 0.93],
+      [0.55, 0.54, 0.5, 0.17, 0.26, 0.57, 0.58],
+      [0.9, 0.86, 0.91, 0.71, 0.78, 0.94, 0.94],
+      [0.99, 0.98, 0.98, 0.99, 0.98, 0.99, 0.98],
+      [0.99, 1.0, 0.99, 0.99, 0.99, 1.0, 1.0],
+    ],
+  },
+  {
+    title: '3-rule / ARP (=Lv3)',
+    rows: [
+      [0.64, 0.6, 0.58, 0.3, 0.38, 0.55, 0.52],
+      [0.89, 0.86, 0.88, 0.71, 0.82, 0.88, 0.86],
+      [0.42, 0.37, 0.33, 0.1, 0.18, 0.41, 0.43],
+      [0.84, 0.78, 0.84, 0.58, 0.69, 0.88, 0.88],
+      [0.99, 0.98, 0.99, 0.98, 0.98, 0.99, 1.0],
+      [1.0, 1.0, 0.99, 0.98, 0.99, 1.0, 1.0],
+    ],
+  },
+];
+const fmt2 = (n) => n.toFixed(2);
+
+const tableCls = 'w-full min-w-[34rem] border-collapse text-sm';
+const thCls = 'border-b border-black/10 px-2 py-2 text-left font-semibold dark:border-white/15';
+const thNumCls = 'border-b border-black/10 px-2 py-2 text-right font-semibold dark:border-white/15';
+const tdCls = 'border-b border-black/[0.06] px-2 py-2 dark:border-white/10';
+const tdNumCls = 'border-b border-black/[0.06] px-2 py-2 text-right font-mono dark:border-white/10';
+---
+
+<BaseLayout
+  title="正誤表 — RDFS-LLM-Bench（人工知能学会全国大会 2026 口頭発表）"
+  description="人工知能学会全国大会 2026 OS-37 発表論文 RDFS-LLM-Bench の正誤表。掲載スコアの訂正。"
+  showNav={false}
+>
+  <div class="mx-auto w-full max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
+    <nav class="mb-12">
+      <a
+        href="/jsai2026/5g3-os-37b-02"
+        class="inline-flex items-center gap-1.5 text-sm text-ink-faint transition-colors hover:text-ink dark:text-[#86868b] dark:hover:text-white"
+      >← 口頭発表ページ</a>
+    </nav>
+
+    <header>
+      <p class="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint dark:text-[#86868b]">正誤表 / Errata</p>
+      <h1 class="mt-3 text-2xl font-semibold leading-snug tracking-tight text-ink sm:text-3xl dark:text-[#f5f5f7]">
+        発表論文の訂正
+      </h1>
+      <p class="mt-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+        人工知能学会全国大会 2026 OS-37「生成AIとナレッジグラフ」で発表した
+        「RDFS-LLM-Bench: 大規模言語モデルによるRDFスキーマ推論の多段階評価ベンチマークの提案」（5G3-OS-37b-02）に
+        掲載したスコアおよび考察について、以下のとおり訂正・撤回します。
+      </p>
+    </header>
+
+    <main class="mt-16 space-y-14">
+      <!-- 訂正の内容 -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">訂正の内容</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <div class="mt-6 space-y-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <p>
+            発表論文に掲載したスコアは、オープンウェイトモデル（Llama・gpt-oss）に与えたプロンプト内の RDFS 語彙が一部誤っており、該当モデルのスコアが本来の性能を正しく反映していませんでした。表3・表4が対象です。正しいプロンプトで評価した値に訂正します。
+          </p>
+          <p>
+            あわせて、指標の定義・名称を一部見直しました。
+          </p>
+        </div>
+      </section>
+
+      <!-- 訂正後の統合指標 -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">表3（修正版）統合指標による LLM 間の性能比較</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-3 font-mono text-xs text-ink-faint dark:text-[#86868b]">flex 評価モード ・ 太字は各指標の最高値</p>
+        <div class="mt-4 overflow-x-auto">
+          <table class={tableCls}>
+            <thead>
+              <tr class="text-xs uppercase tracking-wider text-ink dark:text-[#f5f5f7]">
+                <th class={thCls}>LLM</th>
+                {cols.map((c) => <th class={thNumCls}>{c}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((r, ri) => (
+                <tr>
+                  <td class={`${tdCls} font-medium text-ink dark:text-[#f5f5f7]`}>{r.name}</td>
+                  {r.v.map((val, ci) => (
+                    <td
+                      class={`${tdNumCls} ${colMaxRow[ci] === ri ? 'font-semibold text-ink dark:text-[#f5f5f7]' : 'text-ink-soft dark:text-[#a1a1a6]'}`}
+                    >{fmt(val)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 表4（修正版） -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">表4（修正版）主要な推論タスクにおけるデータセット別の推論精度</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-3 font-mono text-xs text-ink-faint dark:text-[#86868b]">指標: f1_triple ・ プロンプト: full ・ 評価: flex</p>
+        <div class="mt-3 space-y-1 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <p>Lv1・Lv2 = NRP（規則選択なし）, Lv3 = ARP（規則選択あり）</p>
+          <p>1-rule = 全データセット共通の4タスク（rdfs2,3,7,9）平均, 3-rule = 6パターン平均</p>
+        </div>
+        <div class="mt-6 space-y-8">
+          {t4Blocks.map((b) => (
+            <div>
+              <p class="mb-2 font-mono text-xs font-semibold text-ink dark:text-[#f5f5f7]">{b.title}</p>
+              <div class="overflow-x-auto">
+                <table class={tableCls}>
+                  <thead>
+                    <tr class="text-xs uppercase tracking-wider text-ink dark:text-[#f5f5f7]">
+                      <th class={thCls}>LLM</th>
+                      {t4Cols.map((c) => <th class={thNumCls}>{c}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {b.rows.map((row, ri) => (
+                      <tr>
+                        <td class={`${tdCls} font-medium text-ink dark:text-[#f5f5f7]`}>{t4Models[ri]}</td>
+                        {row.map((val) => (
+                          <td class={`${tdNumCls} text-ink-soft dark:text-[#a1a1a6]`}>{fmt2(val)}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- 指標の修正 -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">指標の修正</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-3 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          発表論文で用いた次の 2 指標を見直しました。
+        </p>
+        <div class="mt-4 overflow-x-auto">
+          <table class={tableCls}>
+            <thead>
+              <tr class="text-xs uppercase tracking-wider text-ink dark:text-[#f5f5f7]">
+                <th class={thCls}>発表論文</th>
+                <th class={thCls}>訂正後</th>
+                <th class={thCls}>変更</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nameMap.map((m) => (
+                <tr>
+                  <td class={`${tdCls} text-ink-soft dark:text-[#a1a1a6]`}>
+                    <span class="font-mono font-medium text-ink dark:text-[#f5f5f7]">{m.before}</span>
+                    <span class="mt-0.5 block text-xs text-ink-faint dark:text-[#86868b]">{m.beforeFull}</span>
+                  </td>
+                  <td class={`${tdCls} text-ink-soft dark:text-[#a1a1a6]`}>
+                    <span class="font-mono font-medium text-ink dark:text-[#f5f5f7]">{m.after}</span>
+                    <span class="mt-0.5 block text-xs text-ink-faint dark:text-[#86868b]">{m.afterFull}</span>
+                  </td>
+                  <td class={`${tdCls} text-ink-soft dark:text-[#a1a1a6]`}>{m.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-5 space-y-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <p>
+            <span class="font-mono text-ink-faint dark:text-[#86868b]">TR</span> は
+            <span class="font-mono text-ink-faint dark:text-[#86868b]">NCR</span> の名称変更のみで、計算は同一です。
+          </p>
+          <p>
+            <span class="font-mono text-ink-faint dark:text-[#86868b]">RDK</span> は NS 上の生の F1 値で、推論能力と規則知識の影響が混ざり、両者を分離できませんでした。
+            <span class="font-mono text-ink-faint dark:text-[#86868b]">RDI</span> は F1_name / F1_full の比率をとることで推論能力の影響を取り除き、規則定義の知識のみの影響（規則定義への依存度）を捉えます。
+          </p>
+          <p class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+            RDK = Lv1i:1-rule における NS の F1 値 ／ RDI = F1_name / F1_full（NS 上、Lv 全体平均）
+          </p>
+        </div>
+      </section>
+
+      <!-- 撤回する知見 -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">撤回する知見</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-3 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          発表論文では、<span class="font-mono text-ink dark:text-[#f5f5f7]">Lv1:rdfs11</span> 条件において
+          Llama 3.1 70B・gpt-oss-120b が <span class="font-mono text-ink dark:text-[#f5f5f7]">rdfs:subClassOf</span> とすべき箇所を
+          <span class="font-mono text-ink dark:text-[#f5f5f7]">rdf:subClassOf</span> と出力して推論精度が低下する、という「RDFS 語彙の誤用」を報告しました。
+        </p>
+        <p class="mt-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          この観測は、これらオープンウェイトモデルに与えたプロンプト内の RDFS 語彙が一部誤っていたことによる見かけ上の現象でした。モデル本来の挙動ではなく、プロンプトの不備に起因するものであるため、知見として撤回します。
+        </p>
+      </section>
+    </main>
+  </div>
+</BaseLayout>

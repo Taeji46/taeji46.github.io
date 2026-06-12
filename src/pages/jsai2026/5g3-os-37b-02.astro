@@ -32,21 +32,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
         </div>
         <div class="mt-4 space-y-3">
-          <div
-            aria-disabled="true"
-            class="flex cursor-not-allowed items-center gap-4 rounded-2xl border border-black/[0.1] px-5 py-4 opacity-50 dark:border-white/10"
+          <a
+            href="/jsai2026/jsai2026_5g3-os-37b-02_slides.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group flex items-center gap-4 rounded-2xl border border-black/[0.1] px-5 py-4 transition-all duration-300 hover:border-black/[0.18] hover:bg-black/[0.02] dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[0.04]"
           >
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-black/[0.04] text-ink-faint dark:bg-white/[0.06] dark:text-[#86868b]">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent dark:bg-accent/15">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v4a1 1 0 001 1h4M9 13h6m-6 4h4m1 4H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
               </svg>
             </span>
             <span class="min-w-0 flex-1">
               <span class="block font-medium text-ink dark:text-[#f5f5f7]">発表スライド</span>
-              <span class="mt-0.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">準備中</span>
+              <span class="mt-0.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">PDF</span>
             </span>
-            <span class="shrink-0 font-mono text-xs text-ink-faint dark:text-[#86868b]">近日公開</span>
-          </div>
+            <span class="shrink-0 text-ink-faint transition-all duration-300 group-hover:translate-y-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">↓</span>
+          </a>
           <a
             href="https://pub.confit.atlas.jp/ja/event/jsai2026/presentation/5G3-OS-37b-02"
             target="_blank"
@@ -63,6 +65,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <span class="mt-0.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">confit</span>
             </span>
             <span class="shrink-0 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">↗</span>
+          </a>
+          <a
+            href="/jsai2026/5g3-os-37b-02/errata"
+            class="group flex items-center gap-4 rounded-2xl border border-black/[0.1] px-5 py-4 transition-all duration-300 hover:border-black/[0.18] hover:bg-black/[0.02] dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[0.04]"
+          >
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent dark:bg-accent/15">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.83 15.17 8 16l.83-3.83 8.756-8.756z" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block font-medium text-ink dark:text-[#f5f5f7]">正誤表</span>
+              <span class="mt-0.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">掲載スコアの訂正</span>
+            </span>
+            <span class="shrink-0 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
           </a>
         </div>
       </section>
