@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const meta = ['iOS App', 'Swift', '2023年12月公開'];
+const meta = ['iOS App', 'Swift', 'SwiftUI', 'SwiftData', '2023年12月 App Store 公開', 'iOS 17.0 以上'];
 
 const links = [
   {
@@ -10,11 +10,25 @@ const links = [
     href: 'https://apps.apple.com/jp/app/noti2me-%E6%99%82%E9%96%93%E5%89%B2/id6474107092',
   },
 ];
+
+const features = [
+  { name: 'タイムライン表示', desc: '今日これからある講義情報をタイムラインで表示' },
+  { name: '講義通知', desc: '講義開始前の講義情報の通知' },
+  { name: '出席記録', desc: '出席状況の記録' },
+  { name: 'Todo リスト', desc: '講義ごとの Todo リスト' },
+  { name: 'メモ', desc: '講義のメモ（画像添付可）' },
+];
+
+const tech = [
+  { name: '使用技術', desc: 'SwiftUI / SwiftData' },
+  { name: '開発環境', desc: 'Xcode 15 / iOS 17.0' },
+  { name: '動作環境', desc: 'iOS 17.0 以上' },
+];
 ---
 
 <BaseLayout
   title="Noti2me"
-  description="大学の授業・時間割管理を行う iOS 向けアプリ。"
+  description="スケジュール管理アプリ風のタイムラインを表示できる時間割アプリ。"
   showNav={false}
 >
   <div class="mx-auto w-full max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
@@ -28,7 +42,7 @@ const links = [
       <p class="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint dark:text-[#86868b]">Product / iOS App</p>
       <h1 class="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl dark:text-[#f5f5f7]">Noti2me</h1>
       <p class="mt-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
-        大学の授業・時間割を管理する iOS 向けアプリ。
+        スケジュール管理アプリ風のタイムラインを表示できる時間割アプリ。
       </p>
       <p class="mt-4 font-mono text-xs text-ink-faint dark:text-[#86868b]">{meta.join('  ·  ')}</p>
     </header>
@@ -67,9 +81,70 @@ const links = [
           <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
         </div>
         <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
-          大学の授業・時間割を管理する iOS 向けアプリ。2023年12月に App Store でリリース。
+          大学の授業・時間割を管理する iOS 向けアプリ。カレンダーアプリのようなタイムライン表示を時間割でも実現したい、という思いから開発し、2023年12月に App Store で公開した。
         </p>
       </section>
+
+      <!-- Features -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Features</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-6 space-y-3">
+          {features.map((f) => (
+            <li class="flex gap-3">
+              <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+              <span>
+                <span class="font-medium text-ink dark:text-[#f5f5f7]">{f.name}</span>
+                <span class="text-ink-soft dark:text-[#a1a1a6]"> — {f.desc}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- My Role -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">My Role</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          企画から設計・実装・App Store での公開まで一人で担当。
+        </p>
+      </section>
+
+      <!-- Challenges & Solutions -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Challenges &amp; Solutions</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          採用した SwiftData が当時リリース直後で、公式ドキュメント以外の実装例や情報がほとんど無かった。公式ドキュメントを読み込み、試行錯誤しながらデータモデル設計や永続化の実装パターンを自分で確立して対応した。
+        </p>
+      </section>
+
+      <!-- Tech -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Tech</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-6 space-y-3">
+          {tech.map((t) => (
+            <li class="flex gap-3">
+              <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+              <span>
+                <span class="font-medium text-ink dark:text-[#f5f5f7]">{t.name}</span>
+                <span class="text-ink-soft dark:text-[#a1a1a6]"> — {t.desc}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
     </main>
   </div>
 </BaseLayout>
