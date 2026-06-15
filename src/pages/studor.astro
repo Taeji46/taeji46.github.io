@@ -7,8 +7,19 @@ const features = [
   { name: '集中ルーム', desc: '集中して学習するためのルーム機能' },
   { name: '学習記録', desc: '学習時間・内容の記録' },
   { name: '参考書管理', desc: '使用している参考書の管理' },
+  { name: '参考書の自動カテゴリ分類', desc: '生成AIによる参考書の自動カテゴリ分類' },
+  { name: '学習推移の可視化', desc: '日/週/月/年・カテゴリ・参考書別の学習推移を可視化' },
   { name: 'タイムライン共有', desc: '学習活動をタイムラインで共有' },
   { name: 'ストーリー形式の活動表示', desc: 'ストーリー形式での活動表示' },
+];
+
+const tech = [
+  { name: 'フロントエンド', desc: 'SwiftUI' },
+  { name: 'バックエンド', desc: 'Firebase（JavaScript）。Firestore / Firebase Authentication / Cloud Functions / Cloud Storage を利用。' },
+  {
+    name: '生成AI',
+    desc: 'DeepInfra 経由で LLM（Qwen3-235B-A22B-Instruct-2507）を呼び出し、参考書を「書名・著者・出版社」の情報から 3 段階の推論で自動カテゴリ分類。複数回の LLM 呼び出しを組み合わせ、精度と再現性を両立。',
+  },
 ];
 
 const links = [
@@ -90,6 +101,70 @@ const links = [
               <span>
                 <span class="font-medium text-ink dark:text-[#f5f5f7]">{f.name}</span>
                 <span class="text-ink-soft dark:text-[#a1a1a6]"> — {f.desc}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- Background -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Background</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          学習が続かない一因は、集中する・記録する・振り返る・仲間と共有するといった行為が複数のアプリに分散していることだと考えた。
+          これらを一つにまとめ、学習習慣の継続を支援することを目的に、iOS 向けソーシャル学習アプリとして個人開発した。
+        </p>
+      </section>
+
+      <!-- My Role -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">My Role</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          企画・UI/UX 設計・フロントエンド／バックエンド実装・生成AI 機能の実装まで、一人で担当。
+        </p>
+      </section>
+
+      <!-- Challenges & Solutions -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Challenges &amp; Solutions</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <div class="mt-6 space-y-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <p>
+            複数人が共通のポモドーロタイマーで学ぶ「集中ルーム」で、教材別の集中時間を、ユーザーの入退室や休憩などが関わる中で正しく記録する処理に苦戦した。
+            集中と休憩、離席と復帰、教材の切り替えといった複数の状態が入り組み、当初は不具合が頻発した。
+            そこで、入り組んだ状態を一つずつ解きほぐし、独立した状態の組み合わせとして表現できる構造に設計し直すことで、各処理の役割を明確にし、正確に実装できるようにした。
+          </p>
+          <p>
+            参考書の自動カテゴリ分類では、当初 Gemini 2.5 Flash Lite に 1 リクエストで分類させていたが、精度が低くコストもかさんだ。
+            そこで処理を 3 つのリクエストに分割し、より低コストな Qwen3-235B-A22B-Instruct-2507 で段階的に推論する構成へ変更することで、精度とコストの両方を改善した。
+          </p>
+        </div>
+      </section>
+
+      <!-- Tech -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]">Tech</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-6 space-y-3">
+          {tech.map((t) => (
+            <li class="flex gap-3">
+              <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+              <span>
+                <span class="font-medium text-ink dark:text-[#f5f5f7]">{t.name}</span>
+                <span class="text-ink-soft dark:text-[#a1a1a6]"> — {t.desc}</span>
+                {t.todo && (
+                  <span class="mt-1 block font-mono text-xs text-ink-faint dark:text-[#86868b]">TODO（要確認）: {t.todo}</span>
+                )}
               </span>
             </li>
           ))}
