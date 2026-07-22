@@ -38,6 +38,22 @@ const awards = [
 const publications = {
   upcoming: [
     {
+      year: '2026',
+      title: 'RDFS-LLM-Bench: A Benchmark for Evaluating RDF Schema Inference in LLMs',
+      venue: 'The 25th International Semantic Web Conference (ISWC 2026), Resource Track',
+      href: '/iswc2026/resource',
+    },
+  ],
+  international: [
+    {
+      title:
+        'Assessing Logical Inference Capabilities of Large Language Models through RDF Schema Entailment Rules: A Multi-Level Evaluation',
+      venue: 'The 24th International Semantic Web Conference (ISWC 2025), Poster & Demo Track',
+      href: '/iswc2025/poster',
+    },
+  ],
+  domestic: [
+    {
       year: '2026.06',
       title: 'RDFS-LLM-Bench: 大規模言語モデルによるRDFスキーマ推論の多段階評価ベンチマークの提案',
       venue: '2026年度 人工知能学会全国大会（第40回）',
@@ -49,17 +65,6 @@ const publications = {
       venue: '2026年度 人工知能学会全国大会（第40回）',
       href: '/jsai2026/4yin-a-ka05',
     },
-  ],
-  international: [
-    {
-      title:
-        'Assessing Logical Inference Capabilities of Large Language Models through RDF Schema Entailment Rules: A Multi-Level Evaluation',
-      venue: 'ISWC-C 2025, Poster & Demo Track',
-      detail: 'pp. 304–308, Nov. 2025',
-      href: '/iswc2025/poster',
-    },
-  ],
-  domestic: [
     {
       year: '2025.09',
       title: 'RDFスキーマ推論規則を対象とした大規模言語モデルの推論能力の段階的評価',
@@ -271,7 +276,7 @@ const num = (id) => sections.find((s) => s.id === id)?.n;
                       >
                         <span class="min-w-0 flex-1">
                           <span class="block font-medium leading-snug text-ink dark:text-[#f5f5f7]">{p.title}</span>
-                          <span class="mt-1.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">{p.venue} ・ {p.detail}</span>
+                          <span class="mt-1.5 block font-mono text-xs text-ink-faint dark:text-[#86868b]">{p.venue}{p.detail ? ` ・ ${p.detail}` : ''}</span>
                         </span>
                         <span class="shrink-0 pt-0.5 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">→</span>
                       </a>
