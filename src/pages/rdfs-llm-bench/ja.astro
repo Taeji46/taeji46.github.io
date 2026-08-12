@@ -1,0 +1,548 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const links = [
+  { title: 'GitHub', sub: 'ソースコード (MIT)', href: 'https://github.com/Taeji46/RDFS-LLM-Bench', external: true },
+  { title: 'Zenodo', sub: 'データセット・ログ・結果 (CC BY-SA 4.0)', href: 'https://doi.org/10.5281/zenodo.19867258', external: true },
+];
+
+const meta = ['MIT / CC BY-SA 4.0', 'DOI: 10.5281/zenodo.19867258'];
+
+// dataset types
+const datasets = [
+  { key: 'Real-world knowledge (RK)', desc: 'DBpedia・Wikidata・schema.org の実世界トリプルをそのまま使用。' },
+  { key: 'Counterfactual knowledge (LS / RVA / GS / GSC)', desc: '結論が実世界知識と矛盾するよう、リソースを入れ替え・再割り当てする。' },
+  { key: 'Random symbolic data (NS / NSC)', desc: '各リソースを意味を持たない文字列に置換する。' },
+];
+
+// composite metrics
+const metrics = [
+  ['RI', 'Real-world Inference — 実世界知識での推論能力'],
+  ['SI', 'Structural Inference — 語彙的手がかりに依存しない推論能力'],
+  ['RRS', 'Real-world Rule Selection — 実世界知識での規則選択'],
+  ['SRS', 'Structural Rule Selection — 構造的推論における規則選択'],
+  ['VR', 'Vocabulary Robustness — 語彙の混乱に対する頑健性'],
+  ['TR', 'Typographic Robustness — 命名規則への依存の少なさ'],
+  ['RDI', 'Rule Definition Independence — 規則定義なしで動作する能力'],
+];
+
+// composite metrics (paper Table 7; flex mode) — values from reports/flex/csv/composite_metrics-flex.csv
+const resultCols = ['RI', 'SI', 'RRS', 'SRS', 'VR', 'TR', 'RDI'];
+const results = [
+  { name: 'gpt-oss-120b', v: [0.996, 0.998, 1.0, 1.0, 0.997, 0.993, 0.935] },
+  { name: 'gpt-oss-20b', v: [0.986, 0.99, 0.999, 0.999, 0.996, 0.993, 0.885] },
+  { name: 'GPT-4o', v: [0.933, 0.935, 0.98, 0.99, 0.97, 0.917, 0.852] },
+  { name: 'GPT-4o mini', v: [0.74, 0.712, 0.846, 0.889, 0.82, 0.811, 0.392] },
+  { name: 'Llama 3.1 70B', v: [0.907, 0.941, 0.902, 0.961, 0.828, 0.853, 0.565] },
+  { name: 'Llama 3.1 8B', v: [0.508, 0.517, 0.587, 0.611, 0.499, 0.692, 0.279] },
+];
+const colMax = resultCols.map((_, i) => Math.max(...results.map((r) => r.v[i])));
+
+// average inference F1 per dataset variant (paper Table 8; full setting, flex mode)
+const datasetCols = ['RK', 'LS', 'RVA', 'GS', 'GSC', 'NS', 'NSC'];
+const datasetResults = [
+  { name: 'gpt-oss-120b', v: [0.996, 0.997, 0.995, 0.989, 0.996, 0.998, 0.996] },
+  { name: 'gpt-oss-20b', v: [0.986, 0.987, 0.986, 0.982, 0.987, 0.99, 0.988] },
+  { name: 'GPT-4o', v: [0.933, 0.908, 0.922, 0.82, 0.891, 0.935, 0.911] },
+  { name: 'GPT-4o mini', v: [0.74, 0.708, 0.705, 0.478, 0.569, 0.712, 0.69] },
+  { name: 'Llama 3.1 70B', v: [0.907, 0.855, 0.907, 0.659, 0.764, 0.941, 0.926] },
+  { name: 'Llama 3.1 8B', v: [0.508, 0.479, 0.457, 0.211, 0.28, 0.517, 0.528] },
+];
+const datasetColMax = datasetCols.map((_, i) => Math.max(...datasetResults.map((r) => r.v[i])));
+
+const findings = [
+  '推論モデル (gpt-oss-120b / 20b) は反実仮想・記号データでも高い性能を維持する。gpt-oss-120b は推論で 0.996 (RI)・0.998 (SI)、規則選択で 1.000 に達する。',
+  '非推論モデルは語彙的手がかりが失われると急激に劣化し (Llama 3.1 8B: RI 0.508、GS で 0.211)、字面的・語彙的な手がかりへの依存を示す。',
+  '多くのモデルで SI は RI と同等かそれ以上であり、実世界の手がかりを取り除いても RDFS 含意の非自明な部分は成立する。',
+  '規則数が増えると非推論モデルは精度が下がる一方、推論モデルは安定している。非推論のファミリー内では、大きいモデルほど頑健。',
+];
+
+const preCls =
+  'mt-1.5 whitespace-pre-wrap break-words rounded-lg border border-black/[0.08] bg-black/[0.02] p-3 font-mono text-[11px] leading-relaxed text-ink-soft dark:border-white/10 dark:bg-white/[0.03] dark:text-[#a1a1a6]';
+
+// reasoning-trace evidence (traces are literal English excerpts from the logs)
+const traceExamples = [
+  {
+    title: 'A. 明示的な変数代入',
+    meta: 'gpt-oss-120b · ARP-full · GS · 1-rule · rdfs2',
+    premise: `<River, rdfs:domain, Cameron_Parish,_Louisiana>
+<mouthMountain, River, Calcasieu_River>`,
+    trace: `Using rdfs2: if <i, rdfs:domain, X> and <a, i, b> then <a, rdf:type, X>. So i=River, X=Cameron_Parish,_Louisiana, a=mouthMountain, b=Calcasieu_River. Thus infer <mouthMountain, rdf:type, Cameron_Parish,_Louisiana>.`,
+    note: 'ルール変数 i, X, a, b を具体的な項に明示的に代入してから結論を導出している。',
+  },
+  {
+    title: 'B. 適用不可ルールの系統的チェック',
+    meta: 'gpt-oss-120b · ARP-full · GS · 2-rule · rdfs2 + rdfs3',
+    premise: `<Ayumgba, rdfs:domain, Callistus_Chukwu>
+<Ayumgba, rdfs:range, Animal>
+<birthPlace, Ayumgba, Place>`,
+    trace: `Hence infer <birthPlace, rdf:type, Callistus_Chukwu>. … So infer <Place, rdf:type, Animal>.
+rdfs5: subProperty transitivity: need subProperty statements. None in premise. So can't apply yet.
+rdfs7: … No subproperty premises. So none.
+rdfs9: … No subclass premises.
+rdfs11: subclass transitivity similar.`,
+    note: '候補ルールを全件列挙し、適用できない理由まで明示する checklist 型の手順。',
+  },
+  {
+    title: 'C. 意味的異常があっても形式規則を優先適用',
+    meta: 'gpt-oss-120b · ARP-full · GS · 1-rule · rdfs2',
+    premise: `<Work, rdfs:domain, Charlyne_Yi>
+<musicComposer, Work, Call_Me_Lucky>`,
+    trace: `Using rdfs2: if <i, rdfs:domain, X> and <a, i, b> then <a, rdf:type, X>.
+Here i = Work, X = Charlyne_Yi, a = musicComposer, b = Call_Me_Lucky.
+Thus we infer <musicComposer, rdf:type, Charlyne_Yi>.`,
+    note: 'Charlyne_Yi は人名、musicComposer はプロパティ名で「musicComposer が Charlyne_Yi 型」は意味的に明らかに異常。しかしモデルは意味的なコメントを一切加えず、形式規則をそのまま適用して正解を導いている。',
+  },
+];
+
+const accumulation = {
+  meta: 'gpt-oss-120b · ARP-full · GS · 3-rule · rdfs3 + rdfs5 + rdfs7',
+  premise: `<performer, rdfs:range, Richard_Roxburgh>
+<performer, rdfs:subPropertyOf, presenter>
+<presenter, rdfs:subPropertyOf, Australia:_The_Story_of_Us>
+<Person, performer, castMember>`,
+  trace: `We can combine subPropertyOf transitivity (rdfs5) to infer performer subPropertyOf Australia:_The_Story_of_Us … So produce triple: <performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us> using rdfs5.
+Then rdfs7: … propagate existing property assertion <Person, performer, castMember> to more general properties. …
+- From <performer, rdfs:subPropertyOf, presenter> and <Person, performer, castMember> infer <Person, presenter, castMember>.
+- From <performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us> and <Person, performer, castMember> infer <Person, Australia:_The_Story_of_Us, castMember>.`,
+  response: `<performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us>
+<Person, presenter, castMember>
+<Person, Australia:_The_Story_of_Us, castMember>
+<castMember, rdf:type, Richard_Roxburgh>
+[used_rules: rdfs5, rdfs7, rdfs3]`,
+  note: 'rdfs5 で導出したトリプルを rdfs7 の入力として再利用し、rdfs7 を再適用している。ステップをまたいで導出トリプルを再利用することが、規則数が増えても性能を保つ要因になっている。',
+};
+
+const nameBig = {
+  meta: 'gpt-oss-120b · ARP-name · NS · 1-rule · rdfs2',
+  trace: `…
+- rdfs2: (p rdfs:domain c), (s p o) -> s rdf:type c.
+…
+Using rdfs2: Since oTD7lEpH rdfs:domain BmkM9IaZ and subject FKXah78z oTD7lEpH g752VdWo, infer <FKXah78z, rdf:type, BmkM9IaZ>.`,
+  response: `<FKXah78z, rdf:type, BmkM9IaZ>
+[used_rules: rdfs2]`,
+  note: 'rdfs2 を「(P rdfs:domain C) and (S P O) ⇒ (S rdf:type C)」と正確に再構成し、ちょうど1トリプルを導出している。',
+};
+const nameSmall = {
+  meta: 'gpt-oss-20b · 同一前提・同一条件',
+  trace: `Typically, rdfs2: If a property P is a subproperty of Q, and x P y, then x Q y. … rdfs5: If P rdfs:domain C, and x P ... then x rdf:type C. rdfs7: If P rdfs:range C, and ... P y then y rdf:type C. …
+We can derive: From rdfs5: … So we can infer: <FKXah78z, rdf:type, BmkM9IaZ>.
+Also, we might infer that oTD7lEpH is a property. Maybe rdfs11: … So we could infer <oTD7lEpH, rdf:type, rdf:Property> maybe.`,
+  response: `<FKXah78z, rdf:type, BmkM9IaZ>
+<oTD7lEpH, rdf:type, rdf:Property>
+[used_rules: rdfs5, rdfs11]`,
+  note: '20B は rdfs2 を subPropertyOf 規則と誤認し、domain 規則を rdfs5 に対応づけている。番号の取り違えにより余分なトリプルを生成し、used_rules の番号も不正確。',
+};
+const nameTable = [
+  ['規則の再構成', 'rdfs2 を domain 規則として正確に再構成', 'rdfs2 を subPropertyOf 規則と誤認'],
+  ['導出トリプル数', '1（正解）', '2（余分な1件を含む）'],
+  ['used_rules', 'rdfs2（正解）', 'rdfs5, rdfs11（番号誤り）'],
+];
+
+const bibtex = `@inproceedings{hosokawa2026rdfsllmbench,
+  title     = {RDFS-LLM-Bench: A Benchmark for Evaluating
+               RDF Schema Inference in LLMs},
+  author    = {Hosokawa, Taichi and Chakraborty, Sudesna
+               and Morita, Takeshi},
+  booktitle = {The Semantic Web -- ISWC 2026},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer},
+  year      = {2026},
+  note      = {Resource Track. To appear}
+}`;
+
+const quickstart = `# 1. 依存関係のインストール
+pip install -r requirements.txt
+
+# 2. Zenodo (v4.0.0) から tasks.zip をダウンロードして展開
+mkdir -p data/llm-eval
+cd data/llm-eval && unzip /path/to/tasks.zip && cd -
+
+# 3. scripts/llm-eval/model-config.json にモデルを登録し、
+#    推論・評価・レポートを実行する。`;
+
+const sectionHead = 'text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]';
+---
+
+<BaseLayout
+  lang="ja"
+  title="RDFS-LLM-Bench"
+  description="RDF Schema (RDFS) の推論規則に対する大規模言語モデルの論理推論能力を体系的に評価するベンチマーク。"
+  showNav={false}
+>
+  <div class="mx-auto w-full max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
+    <nav class="mb-12 flex items-center justify-between gap-4">
+      <a href="/" class="inline-flex items-center gap-1.5 text-sm text-ink-faint transition-colors hover:text-ink dark:text-[#86868b] dark:hover:text-white">
+        ← Taichi Hosokawa
+      </a>
+      <span class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+        <a href="/rdfs-llm-bench" class="transition-colors hover:text-ink dark:hover:text-white">English</a>
+        <span class="px-1.5 opacity-40">/</span>
+        <span class="text-ink dark:text-[#f5f5f7]">日本語</span>
+      </span>
+    </nav>
+
+    <header>
+      <p class="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint dark:text-[#86868b]">Research / Benchmark</p>
+      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl dark:text-[#f5f5f7]">
+        RDFS-LLM-Bench
+      </h1>
+      <p class="mt-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+        RDF Schema (RDFS) の推論規則に対する大規模言語モデル (LLM) の論理推論能力を体系的に評価するベンチマーク。
+        規則に基づく構造的推論を、事前学習で記憶した知識への依存から切り分け、回答を自然言語ではなく RDF トリプルとして求める。
+      </p>
+      <p class="mt-6 font-mono text-xs text-ink dark:text-[#f5f5f7]">ISWC 2026 (Resource Track) 採択</p>
+      <p class="mt-1.5 font-mono text-xs text-ink-faint dark:text-[#86868b]">{meta.join('  ·  ')}</p>
+    </header>
+
+    <main class="mt-16 space-y-14">
+      <!-- Resources -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Resources</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-2 divide-y divide-black/[0.07] dark:divide-white/10">
+          {links.map((r) => (
+            <li>
+              <a
+                href={r.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group -mx-3 flex items-center justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+              >
+                <span class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                  <span class="font-medium text-ink dark:text-[#f5f5f7]">{r.title}</span>
+                  <span class="font-mono text-xs text-ink-faint dark:text-[#86868b]">{r.sub}</span>
+                </span>
+                <span class="shrink-0 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <span class="font-mono text-xs text-ink dark:text-[#f5f5f7]">Zenodo version 4.0.0</span>
+          を使用してください。論文で報告した結果に対応します。上記 DOI は常に最新版に解決されます。
+        </p>
+      </section>
+
+      <!-- Quick Start -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Quick Start</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          新しいモデルを評価する際、データセットを再構築する必要はありません。ビルド済みのタスクファイルが Zenodo で公開されています。
+        </p>
+        <pre class={preCls}>{quickstart}</pre>
+        <p class="mt-3 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          LOD ソースから各 dataset variant を再構築する手順を含む全パイプラインは、リポジトリの README に記載しています。
+        </p>
+      </section>
+
+      <!-- Motivation -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Motivation</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <div class="mt-6 space-y-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <p>
+            LLM は多くのタスクで高い性能を示す一方、形式的な論理推論は苦手で、明示的に推論する代わりに事前学習で得た知識に依存しがちである。
+            この問題解決のあり方は、規則に基づく形式推論を前提とする Semantic Web のオントロジー処理とは本質的に相容れない。
+          </p>
+          <p>
+            RDFS 推論に関する既存の評価には3つの限界がある。実世界知識のみを用いるため構造的推論と記憶した知識への依存を切り分けられないこと、
+            単一規則の含意しか評価しないこと、そして実際に用いる直接的な RDF トリプル出力ではなく穴埋め型の自然言語タスクであること。
+            RDFS-LLM-Bench はこれら3点すべてを解消するよう設計している。
+          </p>
+          <p>
+            推論エンジンは純粋な RDFS 含意を高速かつ正確に処理できるため、目的は LLM で推論エンジンを置き換えることではなく、
+            LLM の推論能力がどこまで及ぶかを測ることにある。
+          </p>
+        </div>
+      </section>
+
+      <!-- Design -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Design</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <div class="mt-6 space-y-5 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <p>
+            6 つのコア RDFS entailment rule (rdfs2, rdfs3, rdfs5, rdfs7, rdfs9, rdfs11) とその組み合わせから、計
+            <span class="text-ink dark:text-[#f5f5f7]">19 の entailment pattern</span>
+            （1-rule 6 + 2-rule 7 + 3-rule 6）を構成する。複数ルールのパターンは2種類ある。ある規則の結論が次の規則の前提となる
+            <em>chaining</em> と、規則が独立に適用される <em>parallel</em> である。正解の結論は RDFS 推論エンジン (Apache Jena) で計算する。
+          </p>
+
+          <div>
+            <p class="mb-2 text-sm font-medium text-ink dark:text-[#f5f5f7]">3 種類の dataset type・7 つの variant</p>
+            <ul class="space-y-2">
+              {datasets.map((d) => (
+                <li class="flex gap-3 text-sm">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+                  <span><span class="font-medium text-ink dark:text-[#f5f5f7]">{d.key}</span> — {d.desc}</span>
+                </li>
+              ))}
+            </ul>
+            <p class="mt-3 text-sm">
+              反実仮想の variant は反実仮想であることを前提とせず、摂動した各エントリを source LOD に対して監査している。
+              測定した coverage と反実仮想率はデータセットと併せて公開している。
+            </p>
+          </div>
+
+          <p>
+            プロンプトは 2 軸で変化させる。提示する規則の種類（NRP = 必要な規則のみ / ARP = 全 6 規則）と rule format（full / name / def）で、
+            <span class="text-ink dark:text-[#f5f5f7]">6 通りの prompting condition</span>
+            になる。出力はトリプルの集合として、strict / flex の 2 モードで採点する。
+          </p>
+
+          <div>
+            <p class="mb-2 text-sm font-medium text-ink dark:text-[#f5f5f7]">7 つの composite metrics</p>
+            <dl class="space-y-1.5">
+              {metrics.map(([abbr, desc]) => (
+                <div class="flex gap-3 text-sm">
+                  <dt class="w-10 shrink-0 font-mono text-ink-faint dark:text-[#86868b]">{abbr}</dt>
+                  <dd class="text-ink-soft dark:text-[#a1a1a6]">{desc}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Results</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          商用 / オープンウェイト、推論 / 非推論、パラメータ規模の 3 軸で 6 つの LLM を評価した。composite metrics（flex モード）。太字は各列の最高値。
+        </p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[34rem] border-collapse text-sm">
+            <thead>
+              <tr class="text-xs font-semibold uppercase tracking-wider text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-semibold dark:border-white/15"></th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="2">Inference</th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="2">Rule Selection</th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="3">Robustness</th>
+              </tr>
+              <tr class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15">LLM</th>
+                {resultCols.map((c) => (
+                  <th class="border-b border-black/10 px-2 py-2 text-right font-normal dark:border-white/15">{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((r) => (
+                <tr class="border-b border-black/[0.06] last:border-0 dark:border-white/10">
+                  <td class="whitespace-nowrap px-2 py-2 font-mono text-xs text-ink dark:text-[#f5f5f7]">{r.name}</td>
+                  {r.v.map((val, i) => (
+                    <td class={`px-2 py-2 text-right font-mono text-xs tabular-nums ${val === colMax[i] ? 'font-semibold text-ink dark:text-[#f5f5f7]' : 'text-ink-soft dark:text-[#a1a1a6]'}`}>
+                      {val.toFixed(3)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p class="mt-10 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          dataset variant 別の平均推論 F1（full 設定・flex モード）。
+        </p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[34rem] border-collapse text-sm">
+            <thead>
+              <tr class="text-xs font-semibold uppercase tracking-wider text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-semibold dark:border-white/15"></th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15">Real</th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="4">Counterfactual</th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="2">Symbolic</th>
+              </tr>
+              <tr class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15">LLM</th>
+                {datasetCols.map((c) => (
+                  <th class="border-b border-black/10 px-2 py-2 text-right font-normal dark:border-white/15">{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {datasetResults.map((r) => (
+                <tr class="border-b border-black/[0.06] last:border-0 dark:border-white/10">
+                  <td class="whitespace-nowrap px-2 py-2 font-mono text-xs text-ink dark:text-[#f5f5f7]">{r.name}</td>
+                  {r.v.map((val, i) => (
+                    <td class={`px-2 py-2 text-right font-mono text-xs tabular-nums ${val === datasetColMax[i] ? 'font-semibold text-ink dark:text-[#f5f5f7]' : 'text-ink-soft dark:text-[#a1a1a6]'}`}>
+                      {val.toFixed(3)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-3 font-mono text-[11px] leading-relaxed text-ink-faint dark:text-[#86868b]">
+          RK Real-world · LS / RVA / GS / GSC Counterfactual · NS / NSC Random symbolic
+        </p>
+      </section>
+
+      <!-- Key Findings -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Key Findings</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-6 space-y-3">
+          {findings.map((f) => (
+            <li class="flex gap-3 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+              <span class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+              <span>{f}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- Reasoning traces -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Inside the reasoning traces</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          gpt-oss 系のモデルは reasoning content を出力するため、スコアがそうなる<em>理由</em>を観察できる。以下の抜粋は公開ログから採ったもの。
+          非推論モデルは reasoning content を出力しないため、非推論モデルに関わる2つの主張は定量スコアのみに基づく。
+        </p>
+
+        <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">非推論モデルは語彙的・字面的な手がかりに依存している</h3>
+        <p class="mt-1 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">根拠: 定量スコア</p>
+        <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          GPT-4o の 2-rule では、平均 F1 が RK→GS で 10.1% 低下する一方、RK→LS では 3.4% しか低下しない。
+          LS は英単語ベースの識別子を保つため RK と同程度の手がかりが残るのに対し、GS はそれを壊す。大きな低下は手がかりが失われた場合にのみ現れる。
+          GSC が GS を上回る一般的傾向も同じ方向を示す。命名規則を復元するだけで低下の一部が回復する。
+        </p>
+
+        <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">推論モデルは変数代入・系統的チェック・形式規則の優先適用を行う</h3>
+        <div class="mt-4 space-y-6">
+          {traceExamples.map((ex) => (
+            <div>
+              <p class="text-sm font-medium text-ink dark:text-[#f5f5f7]">{ex.title}</p>
+              <p class="mt-0.5 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">{ex.meta}</p>
+              <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Premise</p>
+              <pre class={preCls}>{ex.premise}</pre>
+              <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Reasoning trace（抜粋）</p>
+              <pre class={preCls}>{ex.trace}</pre>
+              <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">{ex.note}</p>
+            </div>
+          ))}
+        </div>
+
+        <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">導出トリプルを蓄積するため、規則数が増えても精度が安定する</h3>
+        <p class="mt-1 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">{accumulation.meta}</p>
+        <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Premise</p>
+        <pre class={preCls}>{accumulation.premise}</pre>
+        <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Reasoning trace（抜粋）</p>
+        <pre class={preCls}>{accumulation.trace}</pre>
+        <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Response</p>
+        <pre class={preCls}>{accumulation.response}</pre>
+        <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">{accumulation.note}</p>
+
+        <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">規則名だけを与えられると定義を再構成する（大きいモデルほど正確）</h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          ARP-name 設定ではプロンプトに「rdfs2」などの規則名のみが与えられ、if-then 定義は与えられない。
+          gpt-oss 系の両モデルとも回答前に定義を書き出し、full 設定の挙動を部分的に回復する。これが高い RDI スコア（0.935・0.885）につながっている。ただし再構成の正確さは同等ではない。
+        </p>
+        <div class="mt-4 space-y-6">
+          {[nameBig, nameSmall].map((ex) => (
+            <div>
+              <p class="font-mono text-[11px] text-ink-faint dark:text-[#86868b]">{ex.meta}</p>
+              <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Reasoning trace（抜粋）</p>
+              <pre class={preCls}>{ex.trace}</pre>
+              <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Response</p>
+              <pre class={preCls}>{ex.response}</pre>
+              <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">{ex.note}</p>
+            </div>
+          ))}
+        </div>
+        <div class="mt-6 overflow-x-auto">
+          <table class="w-full min-w-[34rem] border-collapse text-sm">
+            <thead>
+              <tr class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15"></th>
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15">gpt-oss-120b</th>
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15">gpt-oss-20b</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nameTable.map((row) => (
+                <tr class="border-b border-black/[0.06] last:border-0 align-top dark:border-white/10">
+                  <td class="px-2 py-2 text-sm font-medium text-ink dark:text-[#f5f5f7]">{row[0]}</td>
+                  <td class="px-2 py-2 text-sm text-ink-soft dark:text-[#a1a1a6]">{row[1]}</td>
+                  <td class="px-2 py-2 text-sm text-ink-soft dark:text-[#a1a1a6]">{row[2]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Limitations -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Limitations</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-6 space-y-3 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+            <span>反実仮想性は保証ではなく測定値である。摂動したエントリを source LOD に対して監査しており、報告した率は開世界仮説の下での上界である。</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+            <span>各タスクは 1 回のみ評価するため、スコアは単一試行の推定値であり、実行間のばらつきは特性化していない。</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+            <span>対象は最大 3 規則の組み合わせ、フラットな <span class="font-mono text-xs">&lt;s, p, o&gt;</span> 表記、シングルターンの zero-shot プロンプトに限る。</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Future Work -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Future Work</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          Chain-of-Thought などのプロンプティング戦略で非推論モデルの差を縮められるかの検証、および
+          Web Ontology Language (OWL) へのベンチマーク拡張を計画している。
+        </p>
+      </section>
+
+      <!-- Citation -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Citation</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          ISWC 2026 Resource Track 採択。ベンチマークを利用する際は論文を引用してください。
+        </p>
+        <pre class={preCls}>{bibtex}</pre>
+        <p class="mt-3 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          データセットと結果には固有の DOI があります:
+          <a href="https://doi.org/10.5281/zenodo.19867258" target="_blank" rel="noopener noreferrer" class="text-ink underline decoration-black/20 underline-offset-4 transition-colors hover:decoration-black/60 dark:text-[#f5f5f7] dark:decoration-white/30 dark:hover:decoration-white/70">10.5281/zenodo.19867258</a>
+        </p>
+        <p class="mt-8 font-mono text-xs leading-relaxed text-ink-faint dark:text-[#86868b]">
+          Funding: NEDO JPNP20006 ／ JSPS KAKENHI 23K11221, 25K03232
+        </p>
+      </section>
+    </main>
+  </div>
+</BaseLayout>

@@ -1,0 +1,570 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const links = [
+  { title: 'GitHub', sub: 'Source code (MIT)', href: 'https://github.com/Taeji46/RDFS-LLM-Bench', external: true },
+  { title: 'Zenodo', sub: 'Datasets, logs, results (CC BY-SA 4.0)', href: 'https://doi.org/10.5281/zenodo.19867258', external: true },
+];
+
+const meta = ['MIT / CC BY-SA 4.0', 'DOI: 10.5281/zenodo.19867258'];
+
+// Dataset types
+const datasets = [
+  { key: 'Real-world knowledge (RK)', desc: 'Triples taken directly from DBpedia, Wikidata, and schema.org.' },
+  { key: 'Counterfactual knowledge (LS / RVA / GS / GSC)', desc: 'Resources are permuted or reassigned so that conclusions conflict with real-world knowledge.' },
+  { key: 'Random symbolic data (NS / NSC)', desc: 'Every resource is replaced with a string carrying no semantic content.' },
+];
+
+// Composite metrics
+const metrics = [
+  ['RI', 'Real-world Inference — inference ability on real-world knowledge'],
+  ['SI', 'Structural Inference — inference ability without lexical cues'],
+  ['RRS', 'Real-world Rule Selection — rule selection on real-world knowledge'],
+  ['SRS', 'Structural Rule Selection — rule selection under structural inference'],
+  ['VR', 'Vocabulary Robustness — robustness against vocabulary confusion'],
+  ['TR', 'Typographic Robustness — independence from naming conventions'],
+  ['RDI', 'Rule Definition Independence — ability to operate without rule definitions'],
+];
+
+// Composite metrics (paper Table 7; flex mode) — values from reports/flex/csv/composite_metrics-flex.csv
+const resultCols = ['RI', 'SI', 'RRS', 'SRS', 'VR', 'TR', 'RDI'];
+const results = [
+  { name: 'gpt-oss-120b', v: [0.996, 0.998, 1.0, 1.0, 0.997, 0.993, 0.935] },
+  { name: 'gpt-oss-20b', v: [0.986, 0.99, 0.999, 0.999, 0.996, 0.993, 0.885] },
+  { name: 'GPT-4o', v: [0.933, 0.935, 0.98, 0.99, 0.97, 0.917, 0.852] },
+  { name: 'GPT-4o mini', v: [0.74, 0.712, 0.846, 0.889, 0.82, 0.811, 0.392] },
+  { name: 'Llama 3.1 70B', v: [0.907, 0.941, 0.902, 0.961, 0.828, 0.853, 0.565] },
+  { name: 'Llama 3.1 8B', v: [0.508, 0.517, 0.587, 0.611, 0.499, 0.692, 0.279] },
+];
+// Bold every row that attains the (displayed) column maximum, so ties are shown as ties.
+const colMax = resultCols.map((_, i) => Math.max(...results.map((r) => r.v[i])));
+
+// Average inference F1 per dataset variant (paper Table 8; full setting, flex mode)
+const datasetCols = ['RK', 'LS', 'RVA', 'GS', 'GSC', 'NS', 'NSC'];
+const datasetResults = [
+  { name: 'gpt-oss-120b', v: [0.996, 0.997, 0.995, 0.989, 0.996, 0.998, 0.996] },
+  { name: 'gpt-oss-20b', v: [0.986, 0.987, 0.986, 0.982, 0.987, 0.99, 0.988] },
+  { name: 'GPT-4o', v: [0.933, 0.908, 0.922, 0.82, 0.891, 0.935, 0.911] },
+  { name: 'GPT-4o mini', v: [0.74, 0.708, 0.705, 0.478, 0.569, 0.712, 0.69] },
+  { name: 'Llama 3.1 70B', v: [0.907, 0.855, 0.907, 0.659, 0.764, 0.941, 0.926] },
+  { name: 'Llama 3.1 8B', v: [0.508, 0.479, 0.457, 0.211, 0.28, 0.517, 0.528] },
+];
+const datasetColMax = datasetCols.map((_, i) => Math.max(...datasetResults.map((r) => r.v[i])));
+
+const findings = [
+  'The reasoning models (gpt-oss-120b / 20b) stay strong on counterfactual and symbolic data. gpt-oss-120b reaches 0.996 (RI) and 0.998 (SI) for inference and 1.000 for rule selection.',
+  'Non-reasoning models degrade sharply once vocabulary cues are removed (Llama 3.1 8B: RI 0.508, and 0.211 on GS), indicating reliance on lexical and typographic cues.',
+  'For most models SI is comparable to or higher than RI, so a non-trivial part of RDFS entailment survives the removal of real-world cues.',
+  'As the number of rules grows, non-reasoning models lose accuracy while reasoning models stay stable. Within the non-reasoning families, larger models are more robust.',
+];
+
+const preCls =
+  'mt-1.5 whitespace-pre-wrap break-words rounded-lg border border-black/[0.08] bg-black/[0.02] p-3 font-mono text-[11px] leading-relaxed text-ink-soft dark:border-white/10 dark:bg-white/[0.03] dark:text-[#a1a1a6]';
+
+// Reasoning-trace evidence
+const traceExamples = [
+  {
+    title: 'A. Explicit variable substitution',
+    meta: 'gpt-oss-120b · ARP-full · GS · 1-rule · rdfs2',
+    premise: `<River, rdfs:domain, Cameron_Parish,_Louisiana>
+<mouthMountain, River, Calcasieu_River>`,
+    trace: `Using rdfs2: if <i, rdfs:domain, X> and <a, i, b> then <a, rdf:type, X>. So i=River, X=Cameron_Parish,_Louisiana, a=mouthMountain, b=Calcasieu_River. Thus infer <mouthMountain, rdf:type, Cameron_Parish,_Louisiana>.`,
+    note: 'The model binds the rule variables i, X, a, b to concrete terms before deriving the conclusion.',
+  },
+  {
+    title: 'B. Systematic checking of inapplicable rules',
+    meta: 'gpt-oss-120b · ARP-full · GS · 2-rule · rdfs2 + rdfs3',
+    premise: `<Ayumgba, rdfs:domain, Callistus_Chukwu>
+<Ayumgba, rdfs:range, Animal>
+<birthPlace, Ayumgba, Place>`,
+    trace: `Hence infer <birthPlace, rdf:type, Callistus_Chukwu>. … So infer <Place, rdf:type, Animal>.
+rdfs5: subProperty transitivity: need subProperty statements. None in premise. So can't apply yet.
+rdfs7: … No subproperty premises. So none.
+rdfs9: … No subclass premises.
+rdfs11: subclass transitivity similar.`,
+    note: 'Every candidate rule is enumerated, and the reason why a rule does not apply is stated explicitly — a checklist-style procedure.',
+  },
+  {
+    title: 'C. Formal rule application despite semantic anomaly',
+    meta: 'gpt-oss-120b · ARP-full · GS · 1-rule · rdfs2',
+    premise: `<Work, rdfs:domain, Charlyne_Yi>
+<musicComposer, Work, Call_Me_Lucky>`,
+    trace: `Using rdfs2: if <i, rdfs:domain, X> and <a, i, b> then <a, rdf:type, X>.
+Here i = Work, X = Charlyne_Yi, a = musicComposer, b = Call_Me_Lucky.
+Thus we infer <musicComposer, rdf:type, Charlyne_Yi>.`,
+    note: 'Charlyne_Yi is a person name and musicComposer is a property name, so "musicComposer is of type Charlyne_Yi" is semantically anomalous. The model adds no semantic commentary and applies the formal rule, producing the correct answer.',
+  },
+];
+
+const accumulation = {
+  meta: 'gpt-oss-120b · ARP-full · GS · 3-rule · rdfs3 + rdfs5 + rdfs7',
+  premise: `<performer, rdfs:range, Richard_Roxburgh>
+<performer, rdfs:subPropertyOf, presenter>
+<presenter, rdfs:subPropertyOf, Australia:_The_Story_of_Us>
+<Person, performer, castMember>`,
+  trace: `We can combine subPropertyOf transitivity (rdfs5) to infer performer subPropertyOf Australia:_The_Story_of_Us … So produce triple: <performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us> using rdfs5.
+Then rdfs7: … propagate existing property assertion <Person, performer, castMember> to more general properties. …
+- From <performer, rdfs:subPropertyOf, presenter> and <Person, performer, castMember> infer <Person, presenter, castMember>.
+- From <performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us> and <Person, performer, castMember> infer <Person, Australia:_The_Story_of_Us, castMember>.`,
+  response: `<performer, rdfs:subPropertyOf, Australia:_The_Story_of_Us>
+<Person, presenter, castMember>
+<Person, Australia:_The_Story_of_Us, castMember>
+<castMember, rdf:type, Richard_Roxburgh>
+[used_rules: rdfs5, rdfs7, rdfs3]`,
+  note: 'A triple derived by rdfs5 is fed back as input to rdfs7, which is then applied again. Reusing derived triples across steps is what keeps performance stable as the number of rules grows.',
+};
+
+const nameBig = {
+  meta: 'gpt-oss-120b · ARP-name · NS · 1-rule · rdfs2',
+  trace: `…
+- rdfs2: (p rdfs:domain c), (s p o) -> s rdf:type c.
+…
+Using rdfs2: Since oTD7lEpH rdfs:domain BmkM9IaZ and subject FKXah78z oTD7lEpH g752VdWo, infer <FKXah78z, rdf:type, BmkM9IaZ>.`,
+  response: `<FKXah78z, rdf:type, BmkM9IaZ>
+[used_rules: rdfs2]`,
+  note: 'rdfs2 is reconstructed correctly as "(P rdfs:domain C) and (S P O) ⇒ (S rdf:type C)", and exactly one triple is derived.',
+};
+const nameSmall = {
+  meta: 'gpt-oss-20b · same premise, same condition',
+  trace: `Typically, rdfs2: If a property P is a subproperty of Q, and x P y, then x Q y. … rdfs5: If P rdfs:domain C, and x P ... then x rdf:type C. rdfs7: If P rdfs:range C, and ... P y then y rdf:type C. …
+We can derive: From rdfs5: … So we can infer: <FKXah78z, rdf:type, BmkM9IaZ>.
+Also, we might infer that oTD7lEpH is a property. Maybe rdfs11: … So we could infer <oTD7lEpH, rdf:type, rdf:Property> maybe.`,
+  response: `<FKXah78z, rdf:type, BmkM9IaZ>
+<oTD7lEpH, rdf:type, rdf:Property>
+[used_rules: rdfs5, rdfs11]`,
+  note: 'The 20B model mistakes rdfs2 for the subPropertyOf rule and maps the domain rule to rdfs5. The confused numbering leads to a spurious extra triple and an incorrect used_rules line.',
+};
+const nameTable = [
+  ['Rule reconstruction', 'rdfs2 correctly reconstructed as the domain rule', 'rdfs2 mistaken for the subPropertyOf rule'],
+  ['Derived triples', '1 (correct)', '2 (one spurious)'],
+  ['used_rules', 'rdfs2 (correct)', 'rdfs5, rdfs11 (incorrect)'],
+];
+
+const bibtex = `@inproceedings{hosokawa2026rdfsllmbench,
+  title     = {RDFS-LLM-Bench: A Benchmark for Evaluating
+               RDF Schema Inference in LLMs},
+  author    = {Hosokawa, Taichi and Chakraborty, Sudesna
+               and Morita, Takeshi},
+  booktitle = {The Semantic Web -- ISWC 2026},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer},
+  year      = {2026},
+  note      = {Resource Track. To appear}
+}`;
+
+const quickstart = `# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Download tasks.zip from Zenodo (v4.0.0) and extract
+mkdir -p data/llm-eval
+cd data/llm-eval && unzip /path/to/tasks.zip && cd -
+
+# 3. Register your model in scripts/llm-eval/model-config.json,
+#    then run inference, evaluation, and reporting.`;
+
+const sectionHead = 'text-xs font-semibold uppercase tracking-[0.18em] text-ink dark:text-[#f5f5f7]';
+---
+
+<BaseLayout
+  lang="en"
+  title="RDFS-LLM-Bench"
+  description="A benchmark for systematically assessing the logical inference abilities of large language models with respect to RDFS entailment rules."
+  showNav={false}
+>
+  <div class="mx-auto w-full max-w-2xl px-6 py-16 sm:px-8 lg:py-24">
+    <nav class="mb-12 flex items-center justify-between gap-4">
+      <a href="/" class="inline-flex items-center gap-1.5 text-sm text-ink-faint transition-colors hover:text-ink dark:text-[#86868b] dark:hover:text-white">
+        ← Taichi Hosokawa
+      </a>
+      <span class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+        <span class="text-ink dark:text-[#f5f5f7]">English</span>
+        <span class="px-1.5 opacity-40">/</span>
+        <a href="/rdfs-llm-bench/ja" class="transition-colors hover:text-ink dark:hover:text-white">日本語</a>
+      </span>
+    </nav>
+
+    <header>
+      <p class="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint dark:text-[#86868b]">Research / Benchmark</p>
+      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl dark:text-[#f5f5f7]">
+        RDFS-LLM-Bench
+      </h1>
+      <p class="mt-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+        A benchmark for systematically assessing the logical inference abilities of large language
+        models (LLMs) with respect to RDF Schema (RDFS) entailment rules. It separates rule-governed
+        structural inference from reliance on knowledge memorized during pre-training, and requires
+        answers as RDF triples rather than natural language.
+      </p>
+      <p class="mt-6 font-mono text-xs text-ink dark:text-[#f5f5f7]">Accepted at ISWC 2026 (Resource Track)</p>
+      <p class="mt-1.5 font-mono text-xs text-ink-faint dark:text-[#86868b]">{meta.join('  ·  ')}</p>
+    </header>
+
+    <main class="mt-16 space-y-14">
+      <!-- Resources -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Resources</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-2 divide-y divide-black/[0.07] dark:divide-white/10">
+          {links.map((r) => (
+            <li>
+              <a
+                href={r.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group -mx-3 flex items-center justify-between gap-4 rounded-xl px-3 py-4 transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"
+              >
+                <span class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                  <span class="font-medium text-ink dark:text-[#f5f5f7]">{r.title}</span>
+                  <span class="font-mono text-xs text-ink-faint dark:text-[#86868b]">{r.sub}</span>
+                </span>
+                <span class="shrink-0 text-ink-faint transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-ink dark:text-[#86868b] dark:group-hover:text-white">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          Use <span class="font-mono text-xs text-ink dark:text-[#f5f5f7]">Zenodo version 4.0.0</span>,
+          which corresponds to the results reported in the paper. The DOI above always resolves to the latest version.
+        </p>
+      </section>
+
+      <!-- Quick Start -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Quick Start</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          Evaluating a new model does not require rebuilding the datasets — the pre-built task files
+          are published on Zenodo.
+        </p>
+        <pre class={preCls}>{quickstart}</pre>
+        <p class="mt-3 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          The repository README documents the full pipeline, including how to rebuild every dataset
+          variant from the LOD sources.
+        </p>
+      </section>
+
+      <!-- Motivation -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Motivation</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <div class="mt-6 space-y-4 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <p>
+            LLMs perform well on many tasks but still struggle with formal logical inference, and they
+            often answer from knowledge acquired during pre-training instead of reasoning explicitly.
+            That mode of problem solving is at odds with the rule-governed inference at the heart of
+            Semantic Web ontology processing.
+          </p>
+          <p>
+            Existing evaluations of RDFS inference share three limitations: they use only real-world
+            knowledge, so structural inference cannot be separated from memorized knowledge; they
+            evaluate single-rule entailment only; and they use natural-language fill-in-the-blank
+            tasks rather than the direct RDF triple output used in practice. RDFS-LLM-Bench is
+            designed to remove all three.
+          </p>
+          <p>
+            A reasoner already handles pure RDFS entailment quickly and exactly, so the aim is not to
+            replace a reasoner with an LLM, but to measure how far the inference ability of LLMs extends.
+          </p>
+        </div>
+      </section>
+
+      <!-- Design -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Design</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <div class="mt-6 space-y-5 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <p>
+            Six core RDFS entailment rules (rdfs2, rdfs3, rdfs5, rdfs7, rdfs9, rdfs11) and their
+            combinations yield
+            <span class="text-ink dark:text-[#f5f5f7]">19 entailment patterns</span>
+            (6 1-rule, 7 2-rule, 6 3-rule). Multi-rule patterns are of two kinds: <em>chaining</em>,
+            where the conclusion of one rule is a premise of the next, and <em>parallel</em>, where
+            rules apply independently. Ground-truth conclusions are computed with an RDFS reasoner
+            (Apache Jena).
+          </p>
+
+          <div>
+            <p class="mb-2 text-sm font-medium text-ink dark:text-[#f5f5f7]">Three dataset types, seven variants</p>
+            <ul class="space-y-2">
+              {datasets.map((d) => (
+                <li class="flex gap-3 text-sm">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+                  <span><span class="font-medium text-ink dark:text-[#f5f5f7]">{d.key}</span> — {d.desc}</span>
+                </li>
+              ))}
+            </ul>
+            <p class="mt-3 text-sm">
+              The counterfactual variants are not assumed to be counterfactual: every perturbed entry
+              is audited against the source LOD, and the measured coverage and counterfactuality rates
+              are published with the datasets.
+            </p>
+          </div>
+
+          <p>
+            Prompts vary along two axes: the presented rule type (NRP, only the necessary rules / ARP,
+            all six rules) and the rule format (full, name, def), giving
+            <span class="text-ink dark:text-[#f5f5f7]">six prompting conditions</span>.
+            Outputs are scored as sets of triples under two matching modes, strict and flex.
+          </p>
+
+          <div>
+            <p class="mb-2 text-sm font-medium text-ink dark:text-[#f5f5f7]">Seven composite metrics</p>
+            <dl class="space-y-1.5">
+              {metrics.map(([abbr, desc]) => (
+                <div class="flex gap-3 text-sm">
+                  <dt class="w-10 shrink-0 font-mono text-ink-faint dark:text-[#86868b]">{abbr}</dt>
+                  <dd class="text-ink-soft dark:text-[#a1a1a6]">{desc}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Results</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          Six LLMs were evaluated across three axes: commercial versus open-weight, reasoning versus
+          non-reasoning, and parameter scale. Composite metrics (flex mode); bold marks the best value
+          in each column.
+        </p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[34rem] border-collapse text-sm">
+            <thead>
+              <tr class="text-xs font-semibold uppercase tracking-wider text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-semibold dark:border-white/15"></th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="2">Inference</th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="2">Rule Selection</th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="3">Robustness</th>
+              </tr>
+              <tr class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15">LLM</th>
+                {resultCols.map((c) => (
+                  <th class="border-b border-black/10 px-2 py-2 text-right font-normal dark:border-white/15">{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((r) => (
+                <tr class="border-b border-black/[0.06] last:border-0 dark:border-white/10">
+                  <td class="whitespace-nowrap px-2 py-2 font-mono text-xs text-ink dark:text-[#f5f5f7]">{r.name}</td>
+                  {r.v.map((val, i) => (
+                    <td class={`px-2 py-2 text-right font-mono text-xs tabular-nums ${val === colMax[i] ? 'font-semibold text-ink dark:text-[#f5f5f7]' : 'text-ink-soft dark:text-[#a1a1a6]'}`}>
+                      {val.toFixed(3)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p class="mt-10 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          Average inference F1 per dataset variant (full setting, flex mode).
+        </p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[34rem] border-collapse text-sm">
+            <thead>
+              <tr class="text-xs font-semibold uppercase tracking-wider text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-semibold dark:border-white/15"></th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15">Real</th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="4">Counterfactual</th>
+                <th class="border-b border-black/10 px-2 py-2 text-center font-semibold dark:border-white/15" colspan="2">Symbolic</th>
+              </tr>
+              <tr class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15">LLM</th>
+                {datasetCols.map((c) => (
+                  <th class="border-b border-black/10 px-2 py-2 text-right font-normal dark:border-white/15">{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {datasetResults.map((r) => (
+                <tr class="border-b border-black/[0.06] last:border-0 dark:border-white/10">
+                  <td class="whitespace-nowrap px-2 py-2 font-mono text-xs text-ink dark:text-[#f5f5f7]">{r.name}</td>
+                  {r.v.map((val, i) => (
+                    <td class={`px-2 py-2 text-right font-mono text-xs tabular-nums ${val === datasetColMax[i] ? 'font-semibold text-ink dark:text-[#f5f5f7]' : 'text-ink-soft dark:text-[#a1a1a6]'}`}>
+                      {val.toFixed(3)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-3 font-mono text-[11px] leading-relaxed text-ink-faint dark:text-[#86868b]">
+          RK Real-world · LS / RVA / GS / GSC Counterfactual · NS / NSC Random symbolic
+        </p>
+      </section>
+
+      <!-- Key Findings -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Key Findings</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-6 space-y-3">
+          {findings.map((f) => (
+            <li class="flex gap-3 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+              <span class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+              <span>{f}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- Reasoning traces -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Inside the reasoning traces</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          The gpt-oss models expose their reasoning content, which makes it possible to look at
+          <em>why</em> the scores come out the way they do. The excerpts below are taken from the
+          published logs. Non-reasoning models emit no reasoning content, so the two claims that
+          concern them rest on quantitative scores alone.
+        </p>
+
+        <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">Non-reasoning models lean on lexical and typographic cues</h3>
+        <p class="mt-1 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">Evidence: quantitative scores</p>
+        <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          For GPT-4o on 2-rule patterns, average F1 falls by 10.1% from RK to GS but only by 3.4% from
+          RK to LS. LS keeps word-like identifiers and therefore retains cues comparable to RK, whereas
+          GS destroys them — the large drop appears only where the cues are gone. The general tendency
+          for GSC to outperform GS points the same way: restoring naming conventions alone recovers
+          part of the loss.
+        </p>
+
+        <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">Reasoning models substitute variables, check rules systematically, and prefer formal application</h3>
+        <div class="mt-4 space-y-6">
+          {traceExamples.map((ex) => (
+            <div>
+              <p class="text-sm font-medium text-ink dark:text-[#f5f5f7]">{ex.title}</p>
+              <p class="mt-0.5 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">{ex.meta}</p>
+              <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Premise</p>
+              <pre class={preCls}>{ex.premise}</pre>
+              <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Reasoning trace (excerpt)</p>
+              <pre class={preCls}>{ex.trace}</pre>
+              <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">{ex.note}</p>
+            </div>
+          ))}
+        </div>
+
+        <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">Derived triples are accumulated, which keeps accuracy stable as rules are added</h3>
+        <p class="mt-1 font-mono text-[11px] text-ink-faint dark:text-[#86868b]">{accumulation.meta}</p>
+        <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Premise</p>
+        <pre class={preCls}>{accumulation.premise}</pre>
+        <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Reasoning trace (excerpt)</p>
+        <pre class={preCls}>{accumulation.trace}</pre>
+        <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Response</p>
+        <pre class={preCls}>{accumulation.response}</pre>
+        <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">{accumulation.note}</p>
+
+        <h3 class="mt-10 font-semibold text-ink dark:text-[#f5f5f7]">Given only rule names, reasoning models rebuild the definitions — the larger one more faithfully</h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          Under ARP-name the prompt supplies rule names such as "rdfs2" but no if-then definitions.
+          Both gpt-oss models write the definitions out before answering, which partially recovers the
+          full-setting behavior and explains their high RDI scores (0.935 and 0.885). The
+          reconstruction is not equally reliable.
+        </p>
+        <div class="mt-4 space-y-6">
+          {[nameBig, nameSmall].map((ex) => (
+            <div>
+              <p class="font-mono text-[11px] text-ink-faint dark:text-[#86868b]">{ex.meta}</p>
+              <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Reasoning trace (excerpt)</p>
+              <pre class={preCls}>{ex.trace}</pre>
+              <p class="mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-faint dark:text-[#86868b]">Response</p>
+              <pre class={preCls}>{ex.response}</pre>
+              <p class="mt-2 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">{ex.note}</p>
+            </div>
+          ))}
+        </div>
+        <div class="mt-6 overflow-x-auto">
+          <table class="w-full min-w-[34rem] border-collapse text-sm">
+            <thead>
+              <tr class="font-mono text-xs text-ink-faint dark:text-[#86868b]">
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15"></th>
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15">gpt-oss-120b</th>
+                <th class="border-b border-black/10 px-2 py-2 text-left font-normal dark:border-white/15">gpt-oss-20b</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nameTable.map((row) => (
+                <tr class="border-b border-black/[0.06] last:border-0 align-top dark:border-white/10">
+                  <td class="px-2 py-2 text-sm font-medium text-ink dark:text-[#f5f5f7]">{row[0]}</td>
+                  <td class="px-2 py-2 text-sm text-ink-soft dark:text-[#a1a1a6]">{row[1]}</td>
+                  <td class="px-2 py-2 text-sm text-ink-soft dark:text-[#a1a1a6]">{row[2]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Limitations -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Limitations</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <ul class="mt-6 space-y-3 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+            <span>Counterfactuality is measured, not guaranteed: perturbed entries are audited against the source LOD, and the reported rates are upper bounds under the open-world assumption.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+            <span>Each task is evaluated once, so the scores are single-trial estimates and run-to-run variance is not characterized.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint/60"></span>
+            <span>Coverage stops at three combined rules, flat <span class="font-mono text-xs">&lt;s, p, o&gt;</span> notation, and single-turn zero-shot prompting.</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Future Work -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Future Work</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          Whether prompting strategies such as chain-of-thought can narrow the gap for non-reasoning
+          models, and extending the benchmark to the Web Ontology Language (OWL).
+        </p>
+      </section>
+
+      <!-- Citation -->
+      <section>
+        <div class="flex items-center gap-4">
+          <h2 class={sectionHead}>Citation</h2>
+          <span class="h-px flex-1 bg-black/10 dark:bg-white/15"></span>
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          Accepted at the ISWC 2026 Resource Track. Please cite the paper when you use the benchmark.
+        </p>
+        <pre class={preCls}>{bibtex}</pre>
+        <p class="mt-3 text-sm leading-relaxed text-ink-soft dark:text-[#a1a1a6]">
+          The datasets and results have their own DOI:
+          <a href="https://doi.org/10.5281/zenodo.19867258" target="_blank" rel="noopener noreferrer" class="text-ink underline decoration-black/20 underline-offset-4 transition-colors hover:decoration-black/60 dark:text-[#f5f5f7] dark:decoration-white/30 dark:hover:decoration-white/70">10.5281/zenodo.19867258</a>.
+        </p>
+        <p class="mt-8 font-mono text-xs leading-relaxed text-ink-faint dark:text-[#86868b]">
+          Funding: NEDO JPNP20006 ／ JSPS KAKENHI 23K11221, 25K03232
+        </p>
+      </section>
+    </main>
+  </div>
+</BaseLayout>
